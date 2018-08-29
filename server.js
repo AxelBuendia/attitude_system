@@ -1,12 +1,9 @@
 //********************************************************************************//
 //************************* EXPRESS SERVER ***************************************//
 //********************************************************************************//
-const http = require('http');
 const express = require('express')
 const app = express();
-
-//initialize a simple http server
-const server = http.createServer(app);
+const expressWS = require('express-ws')(app);
 
 // static files in public
 app.use(express.static('public'));
@@ -14,6 +11,12 @@ app.use(express.static('public'));
 // http://expressjs.com/en/starter/basic-routing.html
 app.get('/', function(request, response) {
   response.sendFile(__dirname + '/views/index.html');
+});
+
+var GamesData = [];
+
+app.ws('/', function(ws, request) {
+  var wss = expressWS.getWss();  
 });
 
 var listener = app.listen(process.env.PORT, function(){ console.log('Attitude Server is listening on port '+listener.address().port+'!'); });
@@ -24,11 +27,6 @@ var listener = app.listen(process.env.PORT, function(){ console.log('Attitude Se
 //*********************************************************************************//
 //************************* ATTITUDE SERVER ***************************************//
 //*********************************************************************************//
-
-var WebSocketServer = require('ws').Server;
-var wss = new WebSocketServer({server});
-
-wss.data = {};
 
 wss.getCurrentGames = function (){
   var games = [];

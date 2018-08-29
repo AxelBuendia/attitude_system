@@ -21,7 +21,6 @@
     "url": "git+https://github.com/AxelBuendia/attitude_system.git"
   },
   "dependencies": {
-    "express": "^4.16.3",
-    "ws": "^6.0.0"
+    "express-ws": "^4.0.0"
   }
 }
