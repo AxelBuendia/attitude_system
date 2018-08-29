@@ -2,9 +2,10 @@
   "name": "attitude_server",
   "version": "1.0.0",
   "description": "Server app for attitude rpg system",
-  "main": "server.js",
+  "main": "index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "keywords": [
     "attitude",
@@ -12,6 +13,13 @@
   ],
   "author": "Axel Buendia",
   "license": "ISC",
+  "engines": {
+    "node": "8.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AxelBuendia/attitude_system.git"
+  },
   "dependencies": {
     "express": "^4.16.3",
     "ws": "^6.0.0"

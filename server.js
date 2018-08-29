@@ -1,9 +1,12 @@
 //********************************************************************************//
 //************************* EXPRESS SERVER ***************************************//
 //********************************************************************************//
-
+const http = require('http');
 const express = require('express')
-const app = express()
+const app = express();
+
+//initialize a simple http server
+const server = http.createServer(app);
 
 // static files in public
 app.use(express.static('public'));
@@ -13,7 +16,7 @@ app.get('/', function(request, response) {
   response.sendFile(__dirname + '/views/index.html');
 });
 
-var listener = app.listen(80, function(){ console.log('Attitude Server is listening on port '+listener.address().port+'!'); });
+var listener = app.listen(process.env.PORT, function(){ console.log('Attitude Server is listening on port '+listener.address().port+'!'); });
 
 
 
@@ -23,7 +26,7 @@ var listener = app.listen(80, function(){ console.log('Attitude Server is listen
 //*********************************************************************************//
 
 var WebSocketServer = require('ws').Server;
-var wss = new WebSocketServer({port: 8000});
+var wss = new WebSocketServer({server});
 
 wss.data = {};
 
@@ -221,7 +224,7 @@ wss.on('connection', function(ws) {
 
 });
 
-console.log('Serveur écoute le port 8000');
+console.log('Serveur écoute le port '+process.env.PORT);
 
 var chronoStart = 60;
 var chrono = chronoStart;

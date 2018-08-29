@@ -45,11 +45,11 @@ var CONNEXION = (function (){
 
   _connexion.send = function (json) { _connexion.ws.send(JSON.stringify(json)); };
 
-  _connectTo = function (url) {
+  function _connectTo (url) {
     var webSocket = window.WebSocket || window.MozWebSocket;
     _connexion.addMessageListener('ws_error', ConnectionErrorManager);
 
-    _connexion.ws = new webSocket('ws://'+url+':8000');
+    _connexion.ws = new webSocket('ws://'+url);
 
     _connexion.ws.onerror = function (error) {
       // an error occurred when sending/receiving data
