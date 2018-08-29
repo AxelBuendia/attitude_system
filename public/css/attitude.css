@@ -1,0 +1,143 @@
+/* Checkbox management */
+.checkbox {
+  display: inline-block;
+  cursor: pointer;
+  font-size: 0.7em; line-height:1em;
+}
+.checkbox:before {
+  content: "";
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  vertical-align: top;
+  background-color: #cccccc;
+  color: #f3f3f3;
+  text-align: center;
+  box-shadow: inset 0px 2px 3px 0px rgba(0, 0, 0, .3), 0px 1px 0px 0px rgba(255, 255, 255, .8);
+  border-radius: 3px;
+}
+input[type=checkbox]:checked + .checkbox:before {
+  content: "\2713";
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, .2);
+}
+/* End of Chack Box management */
+body {
+  font-family: Prototype, Helvetica, Arial, sans-serif;
+}
+/* low res: one column */
+.grid_wrapper {
+  display: grid;
+  grid-template-columns: auto;
+}
+header {
+  font-size: xx-large;
+  font-weight: bold;
+  grid-column: 1;
+  grid-row: 1;
+}
+aside {
+  grid-column: 1;
+  grid-row: 2;
+  justify-self: stretch;
+}
+article {
+  grid-column: 1;
+  grid-row: 3;
+}
+/* Middle res: 2 columns */
+@media only screen and (min-width: 500px) {
+  .grid_wrapper {
+    grid-template-columns: 65% auto;
+  }
+  header {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  aside {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    justify-self: stretch;
+  }
+  article {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+#Grids td {
+  border: 1px solid #333;
+  font-size: medium;
+  text-align: center;
+}
+#Grids td.grids_header{
+  text-align: right;
+}
+#Personnes {
+  width: 100%;
+}
+#grid_stealth {
+  position: absolute;
+}
+.reveal {
+  background-color: #CCC;
+}
+.dramaturge {
+  font-variant: small-caps;
+}
+.chat {
+  width: 100%;
+}
+#Chat {
+  font-size: 0.5em;
+}
+.grille {
+  width: 100%;
+  min-width: 100%;
+}
+.box {
+  border-style: solid;
+  border-color: #cccccc;
+  border-width: 1px;
+  padding: 5px;
+}
+#History {
+  font-size: 0.5em;
+}
+#Message {
+  font-size: 1em;
+  min-width: 100px;
+  display: inline-block;
+}
+#Message:empty {
+  height: 1.2em;
+}
+#SendBtn {
+  width: 5em;
+  display: inline-block;
+  float: right;
+  text-align: right;
+  color: #888888;
+}
+div.splash_screen {
+  background-color: white;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+div.splash_screen div {
+  background-color: white;
+  width: 100%;
+  height: 150px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  opacity: 0.9;
+  text-align: center;
+  margin: auto;
+}
+.no_display {
+  display: none;
+}

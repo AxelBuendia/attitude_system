@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Calque_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 600 600" xml:space="preserve">
+
+<style>
+.draggable {
+	cursor: move;
+}
+.token{
+}
+</style>
+
+<script type="text/ecmascript"><![CDATA[
+	var DragDropMng = {
+		selectedElement: null,
+		startScreenX: 0,
+		startScreenY: 0,
+		startX: 0,
+		startY: 0
+	};
+
+	var SVG = document.querySelector('svg');
+
+	var Grid = {
+		
+		TokenScale: 0.6,
+		ViewPortScale: 1,
+		Grid: [],
+		Scores: [],
+		
+		MoveTokenTo: function (iScore, token){
+			// remove the token for  its previous Score
+			var oldIScore = token.getAttributeNS(null, 'iScore');
+			if(typeof oldIScore === 'undefined' || oldIScore == null)
+				oldIScore = -1;
+			else{
+				oldIScore = parseInt(oldIScore);
+				if (oldIScore >= 0)
+					--(this.Scores[oldIScore]);
+			}
+			// place it in the news Score
+			var square = this.Grid[iScore]; 
+			var delta = - this.Scores[iScore] * 25;
+			token.setAttributeNS(null, 'x', square.x);
+			token.setAttributeNS(null, 'y', square.y + delta);
+			token.setAttributeNS(null, 'transform', 'scale('+this.TokenScale+')');
+			token.setAttributeNS(null, 'iScore', iScore);
+			++(this.Scores[iScore]);
+			return oldIScore;
+		},
+
+		Init: function (grid, tokenScale){
+			this.Grid = grid;
+			for(var iGrid=0; iGrid<grid.length; ++iGrid){
+				this.Scores[iGrid] = 0;
+			}
+			if(typeof tokenScale !== 'undefined') this.TokenScale = tokenScale;
+		},
+
+		FindClosestScore: function (x, y){
+			var minDistance = -1;
+			var iClosestScore = -1;
+			for(var iScore = 0; iScore<this.Scores.length; ++iScore){
+				var square = this.Grid[iScore];
+				var distance = (x-square.x)*(x-square.x) + (y-square.y)*(y-square.y);
+				if(iClosestScore == -1 || distance < minDistance){
+					minDistance = distance;
+					iClosestScore = iScore;
+				}
+			}
+			return iClosestScore;
+		}
+	};
+
+
+	document.initGrid = function (grid, tokenScale){
+		Grid.Init(grid, tokenScale);
+	};
+
+	document.createToken = function (id, iScore) {
+		var newToken = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+		newToken.setAttributeNS('http://www.w3.org/1999/xlink', // xlink NS URI
+        'href',                         // attribute (no 'xlink:')
+        '#token');
+		SVG.appendChild(newToken);
+		if(typeof iScore === 'undefined') iScore = 0;
+		Grid.MoveTokenTo(iScore, newToken);
+	}
+	
+	function selectElement(evt) {
+		DragDropMng.selectedElement = evt.target.parentNode.parentNode.host;	// Chrome
+		if(DragDropMng.selectedElement == null)
+			DragDropMng.selectedElement = evt.target.parentNode.parentNode; // Firefox
+		DragDropMng.startScreenX = evt.screenX;
+		DragDropMng.startScreenY = evt.screenY;
+		DragDropMng.startX = parseInt(DragDropMng.selectedElement.getAttributeNS(null, 'x'));
+		DragDropMng.startY = parseInt(DragDropMng.selectedElement.getAttributeNS(null, 'y'));
+		DragDropMng.selectedElement.parentNode.setAttributeNS(null, "onmousemove", "moveElement(evt)");
+		DragDropMng.selectedElement.parentNode.setAttributeNS(null, "onmouseout", "deselectElement(evt)");
+		DragDropMng.selectedElement.parentNode.setAttributeNS(null, "onmouseup", "deselectElement(evt)");
+		DragDropMng.selectedElement.parentNode.appendChild(DragDropMng.selectedElement);	// bring element to front
+	}
+			
+	function moveElement(evt) {
+		var dx = (evt.screenX - DragDropMng.startScreenX);
+		var dy = (evt.screenY - DragDropMng.startScreenY);
+		
+		var svgBBox = SVG.getBoundingClientRect();
+		var svgViewBox = SVG.viewBox;
+		var scaleX = svgViewBox.baseVal.width / svgBBox.width;
+		var scaleY = svgViewBox.baseVal.height / svgBBox.height;
+	
+		dx *= scaleX / Grid.TokenScale;
+		dy *= scaleY / Grid.TokenScale;
+	
+		DragDropMng.selectedElement.setAttributeNS(null, "x", DragDropMng.startX + dx);
+		DragDropMng.selectedElement.setAttributeNS(null, "y", DragDropMng.startY + dy);
+	}
+			
+	function deselectElement(evt) {
+		if(DragDropMng.selectedElement != null){
+			DragDropMng.selectedElement.parentNode.removeAttributeNS(null, "onmousemove");
+			DragDropMng.selectedElement.parentNode.removeAttributeNS(null, "onmouseout");
+			DragDropMng.selectedElement.parentNode.removeAttributeNS(null, "onmouseup");
+			var iScore = Grid.FindClosestScore(DragDropMng.selectedElement.getAttributeNS(null, 'x'), DragDropMng.selectedElement.getAttributeNS(null, 'y'));
+			var fromIScore = Grid.MoveTokenTo(iScore, DragDropMng.selectedElement);
+			var swapEvent = document.createEvent('SVGEvents');
+			swapEvent.initEvent('swap', true, true);
+			swapEvent.detail={'from':fromIScore,'to':iScore};
+			SVG.dispatchEvent(swapEvent);
+			DragDropMng.selectedElement = null;
+		}
+	}
+			
+	]]>
+</script>
+
+<defs>
+<g id="token" class="draggable token" onmousedown="selectElement(evt)">
+<!--SVGID_1 : Tranche en bas du jeton-->
+<linearGradient id="SVGID_1_R" gradientUnits="userSpaceOnUse" x1="0" y1="106.8457" x2="221.4585" y2="106.8457">
+	<stop  offset="0" style="stop-color:#7D1712"/>
+	<stop  offset="0.0248" style="stop-color:#801713"/>
+	<stop  offset="0.0524" style="stop-color:#8B1814"/>
+	<stop  offset="0.0814" style="stop-color:#9E1916"/>
+	<stop  offset="0.111" style="stop-color:#B91A17"/>
+	<stop  offset="0.135" style="stop-color:#D61918"/>
+	<stop  offset="0.2761" style="stop-color:#F5AEAF"/>
+	<stop  offset="0.283" style="stop-color:#F1A19F"/>
+	<stop  offset="0.3049" style="stop-color:#E47D74"/>
+	<stop  offset="0.327" style="stop-color:#DA5E54"/>
+	<stop  offset="0.3488" style="stop-color:#D2453D"/>
+	<stop  offset="0.3702" style="stop-color:#CC3530"/>
+	<stop  offset="0.3912" style="stop-color:#C92A28"/>
+	<stop  offset="0.411" style="stop-color:#C82726"/>
+	<stop  offset="0.7975" style="stop-color:#A11A16"/>
+	<stop  offset="0.8344" style="stop-color:#971914"/>
+	<stop  offset="1" style="stop-color:#6D150E"/>
+</linearGradient>
+<linearGradient id="SVGID_1_J" gradientUnits="userSpaceOnUse" x1="0" y1="106.8457" x2="221.4585" y2="106.8457">
+	<stop  offset="0" style="stop-color:#6F6C20"/>
+	<stop  offset="0.0248" style="stop-color:#747020"/>
+	<stop  offset="0.0524" style="stop-color:#827E20"/>
+	<stop  offset="0.0814" style="stop-color:#9A961E"/>
+	<stop  offset="0.111" style="stop-color:#C2BC15"/>
+	<stop  offset="0.135" style="stop-color:#C7C113"/>
+	<stop  offset="0.2761" style="stop-color:#E9E7A3"/>
+	<stop  offset="0.283" style="stop-color:#E1DE8E"/>
+	<stop  offset="0.3049" style="stop-color:#D3CE69"/>
+	<stop  offset="0.327" style="stop-color:#C8C24B"/>
+	<stop  offset="0.3488" style="stop-color:#BFBA36"/>
+	<stop  offset="0.3702" style="stop-color:#BAB529"/>
+	<stop  offset="0.3912" style="stop-color:#B8B324"/>
+	<stop  offset="0.411" style="stop-color:#B8B324"/>
+	<stop  offset="0.7975" style="stop-color:#928E1E"/>
+	<stop  offset="0.8344" style="stop-color:#878320"/>
+	<stop  offset="1" style="stop-color:#5F5C1D"/>
+</linearGradient>
+<linearGradient id="SVGID_1_B" gradientUnits="userSpaceOnUse" x1="0" y1="106.8457" x2="221.4585" y2="106.8457">
+	<stop  offset="0" style="stop-color:#125C7E"/>
+	<stop  offset="0.028" style="stop-color:#115F82"/>
+	<stop  offset="0.0591" style="stop-color:#10688F"/>
+	<stop  offset="0.0916" style="stop-color:#0F79A6"/>
+	<stop  offset="0.1251" style="stop-color:#1193C9"/>
+	<stop  offset="0.135" style="stop-color:#149CD6"/>
+	<stop  offset="0.2761" style="stop-color:#B0DFF5"/>
+	<stop  offset="0.3038" style="stop-color:#89C4E5"/>
+	<stop  offset="0.3315" style="stop-color:#65AFD8"/>
+	<stop  offset="0.3589" style="stop-color:#47A2CF"/>
+	<stop  offset="0.3856" style="stop-color:#309AC9"/>
+	<stop  offset="0.411" style="stop-color:#2697C7"/>
+	<stop  offset="0.7975" style="stop-color:#1877A3"/>
+	<stop  offset="0.8344" style="stop-color:#136E97"/>
+	<stop  offset="1" style="stop-color:#034D6E"/>
+</linearGradient>
+<linearGradient id="SVGID_1_V" gradientUnits="userSpaceOnUse" x1="0" y1="106.8457" x2="221.4585" y2="106.8457">
+	<stop  offset="0" style="stop-color:#1A602B"/>
+	<stop  offset="0.0266" style="stop-color:#1B632C"/>
+	<stop  offset="0.0561" style="stop-color:#1E6D2E"/>
+	<stop  offset="0.0871" style="stop-color:#247F31"/>
+	<stop  offset="0.1189" style="stop-color:#2F9835"/>
+	<stop  offset="0.135" style="stop-color:#36A936"/>
+	<stop  offset="0.2761" style="stop-color:#94C98E"/>
+	<stop  offset="0.2809" style="stop-color:#8FC687"/>
+	<stop  offset="0.3077" style="stop-color:#75BB67"/>
+	<stop  offset="0.3345" style="stop-color:#5DB350"/>
+	<stop  offset="0.3608" style="stop-color:#49AD41"/>
+	<stop  offset="0.3866" style="stop-color:#3BAA39"/>
+	<stop  offset="0.411" style="stop-color:#36A936"/>
+	<stop  offset="0.7975" style="stop-color:#248435"/>
+	<stop  offset="0.8344" style="stop-color:#1E7933"/>
+	<stop  offset="1" style="stop-color:#1D5025"/>
+</linearGradient>
+<path fill-rule="evenodd" clip-rule="evenodd" fill="url(#SVGID_1_R)" class="SVGID_1" d="M221.458,85.831c0.002,16.361-10.809,32.723-32.43,45.206c-43.242,24.966-113.353,24.966-156.596-0.001C10.812,118.553,0,102.192,0,85.831V63.93c0,16.361,10.812,32.721,32.433,45.206c43.244,24.966,113.354,24.967,156.596,0c21.621-12.482,32.432-28.844,32.43-45.206V85.831z"/>
+
+<!--SVGID_2 : Bord supérieur du jeton--> 
+<linearGradient id="SVGID_2_R" gradientUnits="userSpaceOnUse" x1="105.1152" y1="128.1035" x2="116.344" y2="-0.2422">
+	<stop  offset="0" style="stop-color:#E52620"/>
+	<stop  offset="1" style="stop-color:#8A1812"/>
+</linearGradient>
+<linearGradient id="SVGID_2_J" gradientUnits="userSpaceOnUse" x1="105.1152" y1="128.1035" x2="116.344" y2="-0.2422">
+	<stop  offset="0" style="stop-color:#EDE41C"/>
+	<stop  offset="1" style="stop-color:#7B7820"/>
+</linearGradient>
+<linearGradient id="SVGID_2_B" gradientUnits="userSpaceOnUse" x1="105.1152" y1="128.1035" x2="116.344" y2="-0.2422">
+	<stop  offset="0" style="stop-color:#42ABE2"/>
+	<stop  offset="1" style="stop-color:#09628B"/>
+</linearGradient>
+<linearGradient id="SVGID_2_V" gradientUnits="userSpaceOnUse" x1="105.1152" y1="128.1035" x2="116.344" y2="-0.2422">
+	<stop  offset="0" style="stop-color:#4DAD33"/>
+	<stop  offset="1" style="stop-color:#156D30"/>
+</linearGradient>
+<path fill-rule="evenodd" clip-rule="evenodd" fill="url(#SVGID_2_R)" class="SVGID_2" d="M32.43,18.724C75.673-6.242,145.783-6.241,189.027,18.726c21.621,12.482,32.432,28.843,32.432,45.204c0.002,16.362-10.809,32.723-32.43,45.206c-43.242,24.967-113.353,24.966-156.596,0C10.812,96.651,0,80.291,0,63.93C0,47.568,10.81,31.208,32.43,18.724z"/>
+
+<!--SVGID_3 : Bord intérieur du jeton--> 
+<linearGradient id="SVGID_3_R" gradientUnits="userSpaceOnUse" x1="30.3159" y1="41.3843" x2="191.144" y2="41.3843">
+	<stop  offset="0" style="stop-color:#7D1712"/>
+	<stop  offset="0.0248" style="stop-color:#801713"/>
+	<stop  offset="0.0524" style="stop-color:#8B1814"/>
+	<stop  offset="0.0814" style="stop-color:#9E1916"/>
+	<stop  offset="0.111" style="stop-color:#B91A17"/>
+	<stop  offset="0.135" style="stop-color:#D61918"/>
+	<stop  offset="0.2761" style="stop-color:#F5AEAF"/>
+	<stop  offset="0.283" style="stop-color:#F1A19F"/>
+	<stop  offset="0.3049" style="stop-color:#E47D74"/>
+	<stop  offset="0.327" style="stop-color:#DA5E54"/>
+	<stop  offset="0.3488" style="stop-color:#D2453D"/>
+	<stop  offset="0.3702" style="stop-color:#CC3530"/>
+	<stop  offset="0.3912" style="stop-color:#C92A28"/>
+	<stop  offset="0.411" style="stop-color:#C82726"/>
+	<stop  offset="0.7975" style="stop-color:#A11A16"/>
+	<stop  offset="0.8344" style="stop-color:#971914"/>
+	<stop  offset="1" style="stop-color:#6D150E"/>
+</linearGradient>
+<linearGradient id="SVGID_3_J" gradientUnits="userSpaceOnUse" x1="30.3159" y1="41.3843" x2="191.144" y2="41.3843">
+	<stop  offset="0" style="stop-color:#6F6C20"/>
+	<stop  offset="0.0294" style="stop-color:#747020"/>
+	<stop  offset="0.062" style="stop-color:#827E20"/>
+	<stop  offset="0.0962" style="stop-color:#9A961E"/>
+	<stop  offset="0.1313" style="stop-color:#C2BC15"/>
+	<stop  offset="0.135" style="stop-color:#C7C113"/>
+	<stop  offset="0.2761" style="stop-color:#E9E7A3"/>
+	<stop  offset="0.2886" style="stop-color:#E1DE8E"/>
+	<stop  offset="0.3138" style="stop-color:#D3CE69"/>
+	<stop  offset="0.339" style="stop-color:#C8C24B"/>
+	<stop  offset="0.3638" style="stop-color:#BFBA36"/>
+	<stop  offset="0.388" style="stop-color:#BAB529"/>
+	<stop  offset="0.411" style="stop-color:#B8B324"/>
+	<stop  offset="0.7975" style="stop-color:#928E1E"/>
+	<stop  offset="0.8344" style="stop-color:#878320"/>
+	<stop  offset="1" style="stop-color:#5F5C1D"/>
+</linearGradient>
+<linearGradient id="SVGID_3_B" gradientUnits="userSpaceOnUse" x1="30.3159" y1="41.3843" x2="191.144" y2="41.3843">
+	<stop  offset="0" style="stop-color:#125C7E"/>
+	<stop  offset="0.028" style="stop-color:#115F82"/>
+	<stop  offset="0.0591" style="stop-color:#10688F"/>
+	<stop  offset="0.0916" style="stop-color:#0F79A6"/>
+	<stop  offset="0.1251" style="stop-color:#1193C9"/>
+	<stop  offset="0.135" style="stop-color:#149CD6"/>
+	<stop  offset="0.2761" style="stop-color:#B0DFF5"/>
+	<stop  offset="0.3038" style="stop-color:#89C4E5"/>
+	<stop  offset="0.3315" style="stop-color:#65AFD8"/>
+	<stop  offset="0.3589" style="stop-color:#47A2CF"/>
+	<stop  offset="0.3856" style="stop-color:#309AC9"/>
+	<stop  offset="0.411" style="stop-color:#2697C7"/>
+	<stop  offset="0.7975" style="stop-color:#1877A3"/>
+	<stop  offset="0.8344" style="stop-color:#136E97"/>
+	<stop  offset="1" style="stop-color:#034D6E"/>
+</linearGradient>
+<linearGradient id="SVGID_3_V" gradientUnits="userSpaceOnUse" x1="30.3159" y1="41.3843" x2="191.144" y2="41.3843">
+	<stop  offset="0" style="stop-color:#1A602B"/>
+	<stop  offset="0.0266" style="stop-color:#1B632C"/>
+	<stop  offset="0.0561" style="stop-color:#1E6D2E"/>
+	<stop  offset="0.0871" style="stop-color:#247F31"/>
+	<stop  offset="0.1189" style="stop-color:#2F9835"/>
+	<stop  offset="0.135" style="stop-color:#36A936"/>
+	<stop  offset="0.2761" style="stop-color:#94C98E"/>
+	<stop  offset="0.2809" style="stop-color:#8FC687"/>
+	<stop  offset="0.3077" style="stop-color:#75BB67"/>
+	<stop  offset="0.3345" style="stop-color:#5DB350"/>
+	<stop  offset="0.3608" style="stop-color:#49AD41"/>
+	<stop  offset="0.3866" style="stop-color:#3BAA39"/>
+	<stop  offset="0.411" style="stop-color:#36A936"/>
+	<stop  offset="0.7975" style="stop-color:#248435"/>
+	<stop  offset="0.8344" style="stop-color:#1E7933"/>
+	<stop  offset="1" style="stop-color:#1D5025"/>
+</linearGradient>
+<path fill-rule="evenodd" clip-rule="evenodd" fill="url(#SVGID_3_R)" class="SVGID_3" d="M53.852,33.786c31.412-18.137,82.341-18.135,113.753,0c15.114,8.726,22.935,20.061,23.506,31.492c0.615-12.329-7.205-24.774-23.506-34.185c-31.412-18.136-82.341-18.137-113.753-0.001c-16.298,9.41-24.117,21.854-23.502,34.184C30.921,53.843,38.74,42.51,53.852,33.786z"/>
+
+<!--SVGID_4 : Plat intérieur du jeton avec les marques blanches--> 
+<linearGradient id="SVGID_4_R" gradientUnits="userSpaceOnUse" x1="106.7686" y1="19.9966" x2="114.6916" y2="110.5569">
+	<stop  offset="0" style="stop-color:#D91415"/>
+	<stop  offset="1" style="stop-color:#8A1812"/>
+</linearGradient>
+<linearGradient id="SVGID_4_J" gradientUnits="userSpaceOnUse" x1="106.7686" y1="19.9966" x2="114.6916" y2="110.5569">
+	<stop  offset="0" style="stop-color:#CAC30D"/>
+	<stop  offset="1" style="stop-color:#7B7820"/>
+</linearGradient>
+<linearGradient id="SVGID_4_B" gradientUnits="userSpaceOnUse" x1="106.7686" y1="19.9966" x2="114.6916" y2="110.5569">
+	<stop  offset="0" style="stop-color:#149CD8"/>
+	<stop  offset="1" style="stop-color:#09628B"/>
+</linearGradient>
+<linearGradient id="SVGID_4_V" gradientUnits="userSpaceOnUse" x1="106.7686" y1="19.9966" x2="114.6916" y2="110.5569">
+	<stop  offset="0" style="stop-color:#3AAA35"/>
+	<stop  offset="1" style="stop-color:#156D30"/>
+</linearGradient>
+<path fill-rule="evenodd" clip-rule="evenodd" fill="url(#SVGID_4_R)" class="SVGID_4" d="M53.854,96.768c31.413,18.136,82.343,18.136,113.753,0.001c15.112-8.725,22.932-20.059,23.504-31.491c-0.571-11.431-8.392-22.766-23.506-31.492c-31.412-18.135-82.341-18.137-113.753,0C38.74,42.51,30.921,53.843,30.35,65.275C30.921,76.708,38.741,88.042,53.854,96.768z"/>
+
+<!--Marques blanches-->
+	<!--Grosse Marque à 2h-->
+	<path fill-rule="evenodd" clip-rule="evenodd" fill="#F2F2F2" d="M175.228,26.719c4.624,2.67,8.642,5.556,12.066,8.601l14.076-8.127c-3.621-2.968-7.725-5.799-12.321-8.453c-4.597-2.655-9.501-5.023-14.641-7.113l-14.077,8.127C165.605,21.729,170.605,24.049,175.228,26.719z"/>
+	<!--Grosse Marque à 11h-->
+	<path fill-rule="evenodd" clip-rule="evenodd" fill="#F2F2F2" d="M106.066,11.355l-5.153-11.102C88.278,0.899,75.798,2.789,64.075,5.932l5.156,11.11C80.807,13.624,93.381,11.728,106.066,11.355z"/>
+	<!--Grosse Marque à 10h-->
+	<path fill-rule="evenodd" clip-rule="evenodd" fill="#F2F2F2" d="M29.517,39.97l-19.243-2.977c-5.443,6.769-8.717,13.974-9.835,21.27l19.229,2.975C20.313,53.914,23.599,46.654,29.517,39.97z"/>
+	<!--Grosse Marque à 7h (haut puis bas)-->
+	<path fill-rule="evenodd" clip-rule="evenodd" fill="#F2F2F2" d="M46.278,101.169c-4.625-2.67-8.642-5.557-12.066-8.602l-14.077,8.128c3.62,2.968,7.723,5.799,12.321,8.454c4.597,2.653,9.5,5.021,14.641,7.111l14.077-8.127C55.901,106.157,50.901,103.839,46.278,101.169z"/>
+	<path fill-rule="evenodd" clip-rule="evenodd" fill="#D9D9D9" d="M20.135,122.859c3.62,2.968,7.723,5.799,12.321,8.454c4.597,2.653,9.5,5.021,14.641,7.111v-22.164c-5.141-2.09-10.044-4.458-14.641-7.111c-4.598-2.655-8.702-5.486-12.321-8.454V122.859z"/>
+	<!--Grosse Marque à 5h (haut puis bas)-->
+	<path fill-rule="evenodd" clip-rule="evenodd" fill="#F2F2F2" d="M152.228,110.819c-11.574,3.416-24.149,5.313-36.834,5.686 l5.151,11.102c12.636-0.646,25.115-2.535,36.839-5.679L152.228,110.819z"/>
+	<path fill-rule="evenodd" clip-rule="evenodd" fill="#E6E6E6" d="M157.384,144.083c-11.724,3.143-24.203,5.033-36.839,5.678v-22.154c12.636-0.646,25.115-2.535,36.839-5.679V144.083z"/>
+	<!--Grosse Marque à 3h30 (haut puis bas)-->
+	<path fill-rule="evenodd" clip-rule="evenodd" fill="#F2F2F2" d="M191.943,87.89l19.242,2.978c5.443-6.769,8.718-13.974,9.835-21.27l-19.229-2.975C201.146,73.947,197.861,81.206,191.943,87.89z"/>
+	<path fill-rule="evenodd" clip-rule="evenodd" fill="#CCCCCC" d="M211.185,112.749c5.443-6.77,8.718-13.974,9.835-21.27V69.598c-1.117,7.296-4.392,14.501-9.835,21.27V112.749z"/>
+	<!--Petite Marque à 2h-->
+	<path fill="#F2F2F2" d="M156.55,28.813l-3.656,2.111c3.924,1.532,7.66,3.293,11.135,5.3c3.475,2.006,6.523,4.163,9.178,6.428l3.656-2.111c-2.702-2.247-5.766-4.394-9.234-6.396S160.442,30.373,156.55,28.813z"/>
+	<!--Petite Marque à 1h-->
+	<path fill="#F2F2F2" d="M116.015,23.6c9.541,0.384,18.975,1.811,27.754,4.282l1.344-2.895c-8.816-2.404-18.229-3.828-27.758-4.278
+		L116.015,23.6z"/>
+	<!--Petite Marque à 11h30-->
+	<path fill="#F2F2F2" d="M76.39,24.986l1.344,2.895c8.78-2.471,18.213-3.897,27.754-4.281l-1.342-2.891C94.619,21.16,85.206,22.583,76.39,24.986z"/>
+	<!--Petite Marque à 10h-->
+	<path fill="#F2F2F2" d="M53.875,34.144c-3.469,2.003-6.531,4.149-9.233,6.397l3.656,2.111c2.654-2.266,5.703-4.423,9.177-6.43c3.475-2.006,7.212-3.767,11.136-5.299l-3.656-2.111C61.062,30.372,57.344,32.142,53.875,34.144z"/>
+	<!--Petite Marque à 9h15-->
+	<path fill="#F2F2F2" d="M30.606,63.168l5.005,0.775c0.664-5.508,3.137-10.956,7.417-16.024l-5.015-0.776C33.85,52.233,31.385,57.667,30.606,63.168z"/>
+	<!--Petite Marque à 8h30-->
+	<path fill="#F2F2F2" d="M35.612,70.021l-4.42,0.683c1.384,5.459,4.445,10.8,9.198,15.749l2.639-0.408C38.749,80.976,36.277,75.529,35.612,70.021z"/>
+	<!--Petite Marque à 7h-->
+	<path fill="#F2F2F2" d="M57.477,97.741c-3.475-2.006-6.524-4.164-9.179-6.43l-1.44,0.832c2.132,1.605,4.452,3.154,6.997,4.624c4.408,2.545,9.21,4.72,14.278,6.55l0.48-0.277C64.688,101.509,60.951,99.748,57.477,97.741z"/>
+	<!--Petite Marque à 6h30-->
+	<path fill="#F2F2F2" d="M77.652,106.265c4.322,1.125,8.778,2.02,13.318,2.682c-4.523-0.709-8.957-1.66-13.234-2.863L77.652,106.265z"/>
+	<!--Petite Marque à 5h45-->
+	<path fill="#F2F2F2" d="M131.087,108.854c4.348-0.655,8.619-1.52,12.765-2.6l-0.079-0.172C139.669,107.237,135.419,108.155,131.087,108.854z"/>
+	<!--Petite Marque à 5h-->
+	<path fill="#F2F2F2" d="M164.031,97.742c-3.475,2.006-7.211,3.767-11.135,5.3l0.461,0.266c5.059-1.828,9.852-4,14.25-6.539c2.553-1.475,4.881-3.027,7.018-4.639l-1.416-0.818C170.554,93.578,167.505,95.736,164.031,97.742z"/>
+	<!--Petite Marque à 3h15-->
+	<path fill="#F2F2F2" d="M185.894,70.021c-0.664,5.51-3.136,10.956-7.416,16.024l2.6,0.402c4.751-4.948,7.811-10.29,9.193-15.75L185.894,70.021z"/>
+	<!--Petite Marque à 2h45-->
+	<path fill="#F2F2F2" d="M190.9,63.169c-0.78-5.501-3.246-10.936-7.409-16.025l-5.015,0.776c4.281,5.069,6.753,10.516,7.418,16.024L190.9,63.169z"/>
+	<!--Bordure intérieure-->
+	<path fill-rule="evenodd" clip-rule="evenodd" fill="#8A181B" class="Couleur" d="M58.056,36.212c29.235-16.735,76.734-16.56,106.096,0.393c29.359,16.951,29.461,44.258,0.229,60.992c-29.236,16.734-76.738,16.561-106.097-0.391C28.923,80.257,28.822,52.949,58.056,36.212z"/>
+
+<!--SVGID_5 dessus du jeton-->
+<linearGradient id="SVGID_5_R" gradientUnits="userSpaceOnUse" x1="117.6343" y1="114.5088" x2="124.9332" y2="27.9576" gradientTransform="matrix(0.9939 -0.0035 -0.0035 0.998 -9.0763 -4.896)">
+	<stop  offset="0" style="stop-color:#D91415"/>
+	<stop  offset="1" style="stop-color:#8A181B"/>
+</linearGradient>
+<linearGradient id="SVGID_5_J" gradientUnits="userSpaceOnUse" x1="117.6343" y1="114.5088" x2="124.9332" y2="27.9576" gradientTransform="matrix(0.9939 -0.0035 -0.0035 0.998 -9.0763 -4.896)">
+	<stop  offset="0" style="stop-color:#CAC30D"/>
+	<stop  offset="1" style="stop-color:#7A7720"/>
+</linearGradient>
+<linearGradient id="SVGID_5_B" gradientUnits="userSpaceOnUse" x1="117.6343" y1="114.5088" x2="124.9332" y2="27.9576" gradientTransform="matrix(0.9939 -0.0035 -0.0035 0.998 -9.0763 -4.896)">
+	<stop  offset="0" style="stop-color:#149CD8"/>
+	<stop  offset="1" style="stop-color:#19688A"/>
+</linearGradient>
+<linearGradient id="SVGID_5_V" gradientUnits="userSpaceOnUse" x1="117.6343" y1="114.5088" x2="124.9332" y2="27.9576" gradientTransform="matrix(0.9939 -0.0035 -0.0035 0.998 -9.0763 -4.896)">
+	<stop  offset="0" style="stop-color:#3AAA35"/>
+	<stop  offset="1" style="stop-color:#236D2F"/>
+</linearGradient>
+<path fill-rule="evenodd" clip-rule="evenodd" fill="url(#SVGID_5_R)" class="SVGID_5" d="M58.056,35.077c29.235-16.734,76.734-16.559,106.096,0.393
+	c29.359,16.951,29.461,44.258,0.229,60.992c-29.236,16.733-76.738,16.561-106.097-0.391C28.923,79.122,28.822,51.813,58.056,35.077z
+	"/>
+</g>
+</defs>
+<!--Border of the attitude grid-->
+<rect x="0.5" y="0.5" width="599" height="599" fill="none" stroke="black"/>
+<!--Losange of the grid-->
+<image x="0" y="20" width="600" height="500" xlink:href="carton2.svg" />
+</svg>

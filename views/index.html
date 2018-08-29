@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Attitude Système</title>
+  <link rel="stylesheet" type="text/css" href="css/attitude.css">
+  <script type="text/javascript" src="js/connexions.js"></script>
+  <script type="text/javascript" src="js/grid.js"></script>
+  <script type="text/javascript" src="js/chat.js"></script>
+  <script type="text/javascript" src="js/content.js"></script>
+  <script type="text/javascript">
+
+    function HideSplashScreen(){
+      var splashElt = document.getElementById('splash_screen');
+      splashElt.style.display = "none";
+    };
+
+    function ShowSplashScreen(){
+      var formElt = document.getElementById('splash_screen_form_select_game');
+      for (var eltIdx in formElt.elements){
+        var elt = formElt.elements[eltIdx];
+        elt.disabled = false;
+      }
+      formElt = document.getElementById('splash_screen_form_create_game');
+      for (var eltIdx in formElt.elements){
+        var elt = formElt.elements[eltIdx];
+        elt.disabled = false;
+      }
+      var splashElt = document.getElementById('splash_screen');
+      splashElt.style.display = "block";
+    };
+
+    function DisableSplashScreen(formElt){
+      for (var eltIdx in formElt.elements){
+        var elt = formElt.elements[eltIdx];
+        elt.disabled = true;
+      }
+    };
+
+    function InitGamesList(json){
+      var selectGameElt = document.getElementById('game_list');
+      json.games.forEach(function (game, idx){
+        var option = document.createElement('OPTION');
+        option.value = game;
+        option.innerText = game;
+        selectGameElt.appendChild(option);
+      });
+    }
+
+    function AdaptDOMElementsToRole(role) {
+      var eltsToReset = document.getElementsByClassName('role');
+      for (var iElt=eltsToReset.length-1; iElt>=0; --iElt) { eltsToReset[iElt].classList.remove('no_display'); }
+      var classHidden = 'no_'+role;
+      var eltsToHide = document.getElementsByClassName(classHidden);
+      for (var iElt=eltsToHide.length-1; iElt>=0; --iElt) { eltsToHide[iElt].classList.add('no_display'); }
+    }
+
+    function InitScreen(json){
+      console.log("Connected!");
+      HideSplashScreen();
+    }
+
+    function ChangeRole(selectElt) {
+      var role = selectElt.value;
+      AdaptDOMElementsToRole(role);
+      console.log('Change role '+role);
+    }
+
+    function ConnectGame(formElt) {
+      var type = formElt['type'].value;
+      var gameName = formElt['game_name'].value;
+      var pseudo = formElt['pseudo'].value;
+      if(pseudo == ''){
+        if(type == 'observer') pseudo = 'Observer';
+        else if(type == 'dramaturge') pseudo = 'Dramaturge';
+        else {
+          alert('Vous devez indiquer un Pseudo');
+          formElt['pseudo'].focus();
+          return false;
+        }
+      }
+      var newGameName = formElt['new_game_name'].value;
+      if(newGameName != '' && type == 'dramaturge') gameName = newGameName;
+      var listeners = [
+        {'msg':'init', 'callback':InitScreen},
+        {'msg':'init', 'callback':InitChat},
+        {'msg':'init', 'callback':InitContent},
+        {'msg':'init', 'callback':InitGrid}
+      ];
+      DisableSplashScreen(formElt);
+      CONNEXION.createGame(pseudo, type, gameName, listeners);
+      return false;
+    }
+
+    window.addEventListener("load", function(event) {
+      AdaptDOMElementsToRole('player');
+      CONNEXION.addListener('games_list', InitGamesList);
+      CONNEXION.connectTo('127.0.0.1');
+    });
+
+  </script>
+</head>
+<body>
+<div class="grid_wrapper">
+  <header class="role no_observer"><span id="Type"></span> [<span id="Pseudo"></span>] <span id="Chrono"></span><br>
+    <table id="Grids" class="role no_observer no_player">
+      <tr><td class="grids_header">Pseudo</td></tr>
+      <tr><td class="grids_header">Audace</td></tr>
+      <tr><td class="grids_header">Précaution</td></tr>
+      <tr><td class="grids_header">Vigilance</td></tr>
+      <tr><td class="grids_header">Concentration</td></tr>
+    </table>
+  </header>
+  <aside class="role no_observer">
+    <div class="grille role no_dramaturge"><img id="grid_stealth" class="no_display" src="img/stealth_2.svg"/><object id="Grille" type="image/svg+xml" data="img/grille_xml.svg"></object></div>
+    <div class="box" width="100%">
+      <div id="Personnes"></div>
+    </div>
+    <div class="box role no_player" width="100%">
+      <div id="Contenu"><span id="url_actuelle"></span><br><input type="text" id="url_nouvelle"><button onclick="SendContentURL(this)">Send</button>
+      </div>
+    </div>
+    <iframe class="role no_player" frameborder="1" id="Content_dramaturge" name="Content_dramaturge" src=""></iframe>
+    <div class="chat">
+      <div class="box">
+        <div id="Message" contentEditable="true"></div>
+        <div id="SendBtn" onclick="SendMessage(CONNEXION)">Send</div>
+      </div>
+      <div id="History" class="box">
+      </div>
+    </div>
+  </aside>
+  <article><iframe class="role no_dramaturge" frameborder="0" id="Content_player" name="Content_player" src=""></iframe></article>
+</div>
+  <div id="splash_screen" class="splash_screen">
+    <div>
+      <h1>Bienvenue dans le système de gestion de parties "Attitude".</h1>
+      <form id="splash_screen_form" onsubmit="return ConnectGame(this);">
+        <p>Choisissez un rôle <select name="type" autofocus onchange="ChangeRole(this)"><option value="player">Joueur</option><option value="observer">Observateur</option><option value="dramaturge">Dramaturge</option></select></p>
+        <p>Puis sélectionnez une partie <select id="game_list" name="game_name"></select></p>
+        <p class="role no_player no_observer">ou créer une nouvelle partie <input type="text" name="new_game_name" autofocus/></p>
+        <p class="role no_observer">Choisissez un pseudo <input type="text" name="pseudo" autofocus/></p>
+      <button type="submit">OK</button></form><br/>
+    </div>
+  </div>
+</body>
+</html>
