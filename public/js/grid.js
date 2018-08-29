@@ -73,16 +73,17 @@ function RemovePersonGrid(json, connexion){
 }
 
 function HidePlayerGrid(cell, hide){
+  console.log('hide player grid');
   var col_i = cell.cellIndex;
   var gridsRows = cell.parentNode.parentNode.rows;
   if(typeof hide === 'undefined')
     hide = !gridsRows[1].cells[col_i].classList.contains('hidden_player');
   for (var row_i=1; row_i<gridsRows.length; ++row_i){
-    var cell = gridsRows[row_i].cells[col_i];
+    var cellToHide = gridsRows[row_i].cells[col_i];
     if (hide)
-      cell.classList.add('hidden_player');
+      cellToHide.classList.add('hidden_player');
     else
-      cell.classList.remove('hidden_player');
+      cellToHide.classList.remove('hidden_player');
   }
 }
 
@@ -109,8 +110,6 @@ function GridNewConnexion(json, connexion){
 
 //{'msg':'hide_player','pseudo':evt.target.innerText,'hide':!hidden}
 function TogglePrivateGrid(json, connexion){
-  console.log('hide symbol');
-  console.log(json);
   // Player part
   var playerHiddenElt = document.getElementById('grid_stealth');
   if (playerHiddenElt != null){

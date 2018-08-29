@@ -13,20 +13,15 @@ app.get('/', function(request, response) {
   response.sendFile(__dirname + '/views/index.html');
 });
 
-var GamesData = [];
-
-app.ws('/', function(ws, request) {
-  var wss = expressWS.getWss();  
-});
-
-var listener = app.listen(process.env.PORT, function(){ console.log('Attitude Server is listening on port '+listener.address().port+'!'); });
-
-
+// reroute ws to ws server
+app.ws('/', function(ws, request) {});
 
 
 //*********************************************************************************//
 //************************* ATTITUDE SERVER ***************************************//
 //*********************************************************************************//
+
+var wss = expressWS.getWss();  
 
 wss.getCurrentGames = function (){
   var games = [];
@@ -222,8 +217,6 @@ wss.on('connection', function(ws) {
 
 });
 
-console.log('Serveur écoute le port '+process.env.PORT);
-
 var chronoStart = 60;
 var chrono = chronoStart;
 
@@ -234,3 +227,10 @@ function chronometre(){
     setTimeout(chronometre, 1000);
   }
 }
+
+// Manage for glitch.com
+if(typeof process=='undefined' || typeof process.env == 'undefined' || typeof process.env.PORT == 'undefined')
+  var process = { env: { PORT: 3000}};
+
+
+var listener = app.listen(process.env.PORT, function(){ console.log('Attitude Server is listening on port '+listener.address().port+'!'); });

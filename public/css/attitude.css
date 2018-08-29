@@ -77,6 +77,16 @@ article {
 #grid_stealth {
   position: absolute;
 }
+input#url_nouvelle {
+  width: 88%;
+}
+#Content {
+  width: 100%;
+  height: 50vh;
+}
+.hidden_player {
+  color: #FFF;
+}
 .reveal {
   background-color: #CCC;
 }

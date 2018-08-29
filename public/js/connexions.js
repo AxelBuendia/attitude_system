@@ -49,7 +49,10 @@ var CONNEXION = (function (){
     var webSocket = window.WebSocket || window.MozWebSocket;
     _connexion.addMessageListener('ws_error', ConnectionErrorManager);
 
-    _connexion.ws = new webSocket('ws://'+url);
+    // Manage for glitch.com
+    if(typeof process=='undefined' || typeof process.env == 'undefined' || typeof process.env.PORT == 'undefined')
+      var process = { env: { PORT: 3000}};
+    _connexion.ws = new webSocket('ws://'+url+':'+process.env.PORT);
 
     _connexion.ws.onerror = function (error) {
       // an error occurred when sending/receiving data
