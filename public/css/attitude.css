@@ -39,13 +39,16 @@ aside {
   grid-column: 1;
   grid-row: 2;
   justify-self: stretch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 article {
   grid-column: 1;
   grid-row: 3;
 }
 /* Middle res: 2 columns */
-@media only screen and (min-width: 500px) {
+@media only screen and (min-width: 750px) {
   .grid_wrapper {
     grid-template-columns: 65% auto;
   }
@@ -56,7 +59,6 @@ article {
   aside {
     grid-column: 2;
     grid-row: 1 / 3;
-    justify-self: stretch;
   }
   article {
     grid-column: 1;
@@ -77,10 +79,16 @@ article {
 #grid_stealth {
   position: absolute;
 }
+#url_actuelle {
+  width: 100%;
+}
 input#url_nouvelle {
   width: 88%;
 }
-#Content {
+#Contenu {
+  width: 100%;
+}
+.content {
   width: 100%;
   height: 50vh;
 }
@@ -101,7 +109,6 @@ input#url_nouvelle {
 }
 .grille {
   width: 100%;
-  min-width: 100%;
 }
 .box {
   border-style: solid;
@@ -114,6 +121,7 @@ input#url_nouvelle {
 }
 #Message {
   font-size: 1em;
+  width: 90%;
   min-width: 100px;
   display: inline-block;
 }
@@ -121,7 +129,7 @@ input#url_nouvelle {
   height: 1.2em;
 }
 #SendBtn {
-  width: 5em;
+  width: 10%;
   display: inline-block;
   float: right;
   text-align: right;
