@@ -49,9 +49,13 @@ var CONNEXION = (function (){
     var webSocket = window.WebSocket || window.MozWebSocket;
     _connexion.addMessageListener('ws_error', ConnectionErrorManager);
 
-    if(exports.CFG.PORT != '')
+    if(typeof exports!='undefined' && typeof exports.CFG!='undefined' && typeof exports.CFG.PORT!='undefined' && exports.CFG.PORT!='')
       url += ':'+exports.CFG.PORT;
-    _connexion.ws = new webSocket('ws://'+url);
+    if(location.protocol=='https:')
+      url = 'wss://'+url;
+    else
+      url = 'ws://'+url;
+    _connexion.ws = new webSocket(url);
 
     _connexion.ws.onerror = function (error) {
       // an error occurred when sending/receiving data

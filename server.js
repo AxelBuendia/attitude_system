@@ -246,9 +246,10 @@ function chronometre(){
 }
 
 // Manage for glitch.com
-var port = config.CFG.PORT;
+var port = '';
 if(typeof process!='undefined' && typeof process.env!='undefined' && typeof process.env.PORT!='undefined')
   port = process.env.PORT;
-
+else if(typeof config!='undefined' && typeof config.CFG!='undefined' && typeof config.CFG.PORT!='undefined')
+  port = config.CFG.PORT;
 
 var listener = app.listen(port, function(){ console.log('Attitude Server is listening on port '+listener.address().port+'!'); });
