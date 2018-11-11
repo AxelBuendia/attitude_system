@@ -15,7 +15,11 @@ function DisplayContent(json, connexion) {
 //		console.log('id:'+id);
 		url = 'https://drive.google.com/file/d/'+id+'/preview';
 	}
-	var eltId = "Content_"+connexion.clientData.type;
+	var eltId = "Content_";
+	if(connexion.clientData.type != 'dramaturge')
+		eltId += "player";
+	else
+		eltId += "dramaturge";
 //	console.log(eltId);
 	var contentElt = document.getElementById(eltId);
 	if (contentElt !== null) contentElt.src = url;
