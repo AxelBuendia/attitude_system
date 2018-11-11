@@ -1,5 +1,9 @@
-var CFG = {};
-if (typeof process != 'undefined' && typeof process.env != 'undefined' && typeof process.env.PORT != 'undefined')
-	CFG.PORT = process.env.PORT;
-else
-	CFG.PORT = 3000;
+if (typeof process == 'undefined'){
+	var process = {};
+}
+if (typeof process.env == 'undefined'){
+  process.env = {};
+}
+if (typeof process.env.WS_PORT == 'undefined'){
+  process.env.WS_PORT = 3000;
+}

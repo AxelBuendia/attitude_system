@@ -1,7 +1,7 @@
 //************************************************************************//
-//************************* CONFIG ***************************************//
+//************************* DOTENV ***************************************//
 //************************************************************************//
-const config = require('./public/js/cfg');
+require('dotenv').config();
 
 //********************************************************************************//
 //************************* EXPRESS SERVER ***************************************//
@@ -21,6 +21,11 @@ app.get('/', function(request, response) {
 // reroute ws to ws server
 app.ws('/', function(ws, request) {});
 
+
+//************************************************************************//
+//************************* CONFIG ***************************************//
+//************************************************************************//
+const config = require('./public/js/cfg');
 
 //*********************************************************************************//
 //************************* ATTITUDE SERVER ***************************************//
@@ -42,9 +47,9 @@ wss.getCurrentGames = function (){
 
 wss.checkPseudo = function (pseudo, gameId, ws) {
   for(var i in this.clients){
-  	var _ws = this.clients[i];
-  	if (_ws != ws && ws.clientData.pseudo == pseudo && ws.clientData.gameId == gameId){
-  		//console.log('Client '+i+' with data '+ws.clientData.pseudo);
+    var _ws = this.clients[i];
+    if (_ws != ws && ws.clientData.pseudo == pseudo && ws.clientData.gameId == gameId){
+      //console.log('Client '+i+' with data '+ws.clientData.pseudo);
       return {'entityIndex':i, 'type':ws.clientData.type};
     }
   }
@@ -59,7 +64,7 @@ wss.getPseudos = function (type, gameId) {
     }
   });
   if (typeof type === 'undefined' || type == 'observer')
-  	pseudos.push('observer');
+    pseudos.push('observer');
   return pseudos;
 };
 
@@ -74,13 +79,13 @@ wss.getPlayerGrids = function (gameId) {
 };
 
 wss.urlParametersToJSon = function (url) {
-	var json = {};
-	var parameters = url.substr(url.indexOf('?')+1).split('&');
-	for (var p in parameters){
-		var parameter = parameters[p].split('=');
-		json[parameter[0]] = parameter[1];
-	}
-	return json;
+  var json = {};
+  var parameters = url.substr(url.indexOf('?')+1).split('&');
+  for (var p in parameters){
+    var parameter = parameters[p].split('=');
+    json[parameter[0]] = parameter[1];
+  }
+  return json;
 };
 
 wss.broadcast = function (data, exceptions) {
@@ -92,7 +97,7 @@ wss.broadcast = function (data, exceptions) {
 
 wss.broadcastToType = function (type, data) {
   this.clients.forEach(function (ws){
-  	if (typeof ws.clientData.type !== 'undefined' && ws.clientData.type == type){
+    if (typeof ws.clientData.type !== 'undefined' && ws.clientData.type == type){
       ws.send(data);
     }
   });
@@ -110,22 +115,22 @@ wss.sendTo = function (ws, data) {
 };
 
 wss.manageNewPseudo = function (json, ws) {
-	var iPseudo = -1;
-	if (typeof json.pseudo !== 'undefined'){
-		var entity = this.checkPseudo(json.pseudo, json.game, ws);
-		iPseudo = entity.entityIndex;
-	}
-	if(iPseudo>-1){
-		ws.send(JSON.stringify({'msg':'pseudo_already_in_use', 'pseudo':json.pseudo}));
-  	console.log('Pseudo '+json.pseudo+' déjà utilisé par le '+iPseudo+'e pseudo dans le jeu '+json.game);
-	}else{
-		ws.clientData.type = json.type.toLowerCase();
+  var iPseudo = -1;
+  if (typeof json.pseudo !== 'undefined'){
+    var entity = this.checkPseudo(json.pseudo, json.game, ws);
+    iPseudo = entity.entityIndex;
+  }
+  if(iPseudo>-1){
+    ws.send(JSON.stringify({'msg':'pseudo_already_in_use', 'pseudo':json.pseudo}));
+    console.log('Pseudo '+json.pseudo+' déjà utilisé par le '+iPseudo+'e pseudo dans le jeu '+json.game);
+  }else{
+    ws.clientData.type = json.type.toLowerCase();
     ws.clientData.gameId = json.game;
     var gameData = this.serverData.games[ws.clientData.gameId];
-		if(typeof json.pseudo !== 'undefined'){
-			ws.clientData.pseudo = json.pseudo;
-			var playersPseudos = this.getPseudos('player', json.game);
-			var dramaturgesPseudos = this.getPseudos('dramaturge', json.game);
+    if(typeof json.pseudo !== 'undefined'){
+      ws.clientData.pseudo = json.pseudo;
+      var playersPseudos = this.getPseudos('player', json.game);
+      var dramaturgesPseudos = this.getPseudos('dramaturge', json.game);
       if(ws.clientData.type == 'player'){
         ws.clientData.grid = { 'elements':[{name:'Vigilance', x:180, y:200, value:7},{name:'Precaution', x:600, y:200, value:0},{name:'Audace', x:150, y:600, value:0},{name:'Concentration', x:600, y:600, value:0}], 'tokensCount':7};
         ws.send(JSON.stringify({'msg':'init','playersPseudos':playersPseudos,'dramaturgesPseudos':dramaturgesPseudos,'clientData':ws.clientData,'gameData':gameData}));
@@ -140,15 +145,15 @@ wss.manageNewPseudo = function (json, ws) {
       }else{
         ws.send(JSON.stringify({'msg':'init','clientData':ws.clientData,'gameData':gameData}));
       }
-			playersPseudos = null;
-			dramaturgesPseudos = null;
-			this.broadcast(JSON.stringify({'msg':'connexion', 'type':ws.clientData.type, 'pseudo':ws.clientData.pseudo, 'grid':ws.clientData.grid}), [ws.clientData.pseudo]);
-			console.log(ws.clientData.type+' ['+ws.clientData.pseudo+'] connecté');
-		}else{
-			ws.send(JSON.stringify({'msg':'init','clientData':ws.clientData,'gameData':gameData}));
-			console.log(ws.clientData.type+' connecté');
-		}
-	}
+      playersPseudos = null;
+      dramaturgesPseudos = null;
+      this.broadcast(JSON.stringify({'msg':'connexion', 'type':ws.clientData.type, 'pseudo':ws.clientData.pseudo, 'grid':ws.clientData.grid}), [ws.clientData.pseudo]);
+      console.log(ws.clientData.type+' ['+ws.clientData.pseudo+'] connecté');
+    }else{
+      ws.send(JSON.stringify({'msg':'init','clientData':ws.clientData,'gameData':gameData}));
+      console.log(ws.clientData.type+' connecté');
+    }
+  }
 };
 
 wss.on('error', function(error){
@@ -176,7 +181,7 @@ wss.on('connection', function(ws) {
   };
 
   ws.on('message', function(message) {
-//  	console.log('message received:'+message);
+//    console.log('message received:'+message);
     try {
       var json = JSON.parse(message);
     } catch (e) {
@@ -185,7 +190,7 @@ wss.on('connection', function(ws) {
     }
 //    console.log(json);
     switch(json.msg){
-    	case 'connect_pseudo':
+      case 'connect_pseudo':
         // New game
         if(!wss.getCurrentGames().includes(json.game)){
           if(typeof wss.serverData.games=='undefined'){
@@ -195,16 +200,16 @@ wss.on('connection', function(ws) {
             wss.serverData.games[json.game] = {};
           }
         }
-    		wss.manageNewPseudo(json, this);
-    	break;
-    	case 'push_content':
-//    		console.log('content has been pushed');
-    		wss.broadcast(JSON.stringify({'msg':'receive_content', 'url':json.url}));
-    		wss.serverData.games[this.clientData.gameId].currentContentURL = json.url;
-    	break;
-    	case 'swap_grid_token':
-	    	wss.broadcastToType('dramaturge', message);
-    	break;
+        wss.manageNewPseudo(json, this);
+      break;
+      case 'push_content':
+//        console.log('content has been pushed');
+        wss.broadcast(JSON.stringify({'msg':'receive_content', 'url':json.url}));
+        wss.serverData.games[this.clientData.gameId].currentContentURL = json.url;
+      break;
+      case 'swap_grid_token':
+        wss.broadcastToType('dramaturge', message);
+      break;
       case 'hide_player'://{'msg':'hide_player','pseudo':evt.target.innerText,'hide':!hidden}
         wss.broadcastToList([json.pseudo], message);
         wss.broadcastToType('dramaturge', message);
@@ -221,8 +226,8 @@ wss.on('connection', function(ws) {
   });
 
   ws.on('close', function(code, message){
-  	var type = this.clientData.type;
-  	var pseudo = (typeof this.clientData.pseudo === 'undefined') ? 'observer' : this.clientData.pseudo;
+    var type = this.clientData.type;
+    var pseudo = (typeof this.clientData.pseudo === 'undefined') ? 'observer' : this.clientData.pseudo;
     console.log(type+' ['+pseudo+'] s\'est déconnecté');
     wss.broadcast(JSON.stringify({'msg':'deconnexion', 'type':type, 'pseudo':pseudo}));
   });
@@ -246,6 +251,7 @@ function chronometre(){
 }
 
 // Manage for glitch.com
-var port = CFG.PORT;
+var port = process.env.PORT;
+console.log(process.env);
 
 var listener = app.listen(port, function(){ console.log('Attitude Server is listening on port '+listener.address().port+'!'); });

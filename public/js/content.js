@@ -15,9 +15,11 @@ function DisplayContent(json, connexion) {
 //		console.log('id:'+id);
 		url = 'https://drive.google.com/file/d/'+id+'/preview';
 	}
-	var eltSelector = "IFRAME.Content:not(.no_"+connexion.clientData.type+")";
-//	console.log(eltSelector);
-	var contentElt = document.querySelectAll(eltSelector)[0];
+	var eltSelector = "IFRAME.content:not(.no_"+connexion.clientData.type+")";
+	console.log(eltSelector);
+	var contentElts = document.querySelectorAll(eltSelector);
+	console.log(contentElts);
+	var contentElt = contentElts[0];
 	if (contentElt !== null) contentElt.src = url;
 	var lastContentElt = document.getElementById("url_actuelle");
 	if (lastContentElt !== null) lastContentElt.innerHTML = url;
