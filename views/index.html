@@ -114,9 +114,9 @@
   <aside class="role no_observer">
     <div class="grille role no_dramaturge"><img id="grid_stealth" class="no_display" src="img/stealth_2.svg"/><object id="Grille" type="image/svg+xml" data="img/grille_xml.svg"></object></div>
     <div class="box role no_player" width="100%">
-      <div id="Contenu"><span id="url_actuelle"></span><br><input type="text" id="url_nouvelle"><button onclick="SendContentURL(this)">Send</button></div>
+      <div id="Contenu"><span id="url_actuelle"></span><br><input type="text" id="url_nouvelle"><button onclick="SendContentURL(this, CONNEXION)">Send</button></div>
     </div>
-    <iframe class="role no_player content" frameborder="1" id="Content_dramaturge" name="Content_dramaturge" src=""></iframe>
+    <iframe class="role no_player content" frameborder="1" id="Content" name="Content" src=""></iframe>
     <div class="box" width="100%">
       <div id="Personnes"></div>
     </div>
@@ -129,7 +129,7 @@
       </div>
     </div>
   </aside>
-  <article><iframe class="role no_dramaturge content" frameborder="0" id="Content_player" name="Content_player" src=""></iframe></article>
+  <article><iframe class="role no_dramaturge content" frameborder="0" id="Content" name="Content" src=""></iframe></article>
 </div>
   <div id="splash_screen" class="splash_screen">
     <div>

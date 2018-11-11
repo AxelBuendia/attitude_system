@@ -15,13 +15,9 @@ function DisplayContent(json, connexion) {
 //		console.log('id:'+id);
 		url = 'https://drive.google.com/file/d/'+id+'/preview';
 	}
-	var eltId = "Content_";
-	if(connexion.clientData.type != 'dramaturge')
-		eltId += "player";
-	else
-		eltId += "dramaturge";
-//	console.log(eltId);
-	var contentElt = document.getElementById(eltId);
+	var eltSelector = "IFRAME.Content:not(.no_"+connexion.clientData.type+")";
+//	console.log(eltSelector);
+	var contentElt = document.querySelectAll(eltSelector)[0];
 	if (contentElt !== null) contentElt.src = url;
 	var lastContentElt = document.getElementById("url_actuelle");
 	if (lastContentElt !== null) lastContentElt.innerHTML = url;
@@ -43,11 +39,11 @@ function InitContent(json, connexion) {
 	}
 }
 
-function SendContentURL(elt) {
+function SendContentURL(elt, connexion) {
 	console.log('Send content...');
   var nouvelleURLElt = document.getElementById('url_nouvelle');
   if (typeof nouvelleURLElt !== 'undefined'){
     var url = nouvelleURLElt.value;
-    CONNEXION.send({'msg':'push_content', 'url':url});
+    connexion.send({'msg':'push_content', 'url':url});
   }
 }
