@@ -49,8 +49,7 @@ var CONNEXION = (function (){
     var webSocket = window.WebSocket || window.MozWebSocket;
     _connexion.addMessageListener('ws_error', ConnectionErrorManager);
 
-    if(typeof exports!='undefined' && typeof exports.CFG!='undefined' && typeof exports.CFG.PORT!='undefined' && exports.CFG.PORT!='')
-      url += ':'+exports.CFG.PORT;
+    url += ':'+CFG.PORT;
     if(location.protocol=='https:')
       url = 'wss://'+url;
     else
