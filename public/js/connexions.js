@@ -41,6 +41,7 @@ var CONNEXION = (function (){
     this.clientData.type = type;
     this.clientData.pseudo = pseudo;
     this.clientData.gameId = game;
+    this.pingIntervalID = window.setInterval(function (){ this.send({'msg':'ping'}); }, 60000);
   };
 
   _connexion.send = function (json) {

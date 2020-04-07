@@ -190,6 +190,9 @@ wss.on('connection', function(ws) {
     }
 //    console.log(json);
     switch(json.msg){
+      case 'ping':
+        ws.send(JSON.stringify({'msg':'pong'}));
+      break;
       case 'connect_pseudo':
         // New game
         if(!wss.getCurrentGames().includes(json.game)){
