@@ -48,9 +48,10 @@ var CONNEXION = (function (){
     _connexion.ws.send(JSON.stringify(json));
   };
 
-  function _connectTo (url) {
+  function _connectTo (url, opencallback) {
     var webSocket = window.WebSocket || window.MozWebSocket;
     _connexion.addMessageListener('ws_error', ConnectionErrorManager);
+    _connexion.clientData = {};
 
     url += ':'+process.env.WS_PORT;
     if(location.protocol=='https:')
@@ -67,8 +68,6 @@ var CONNEXION = (function (){
         _connexion.callListeners(_connexion.listeners['ws_error'], {'connexion':_connexion, 'error':error});
       }
     };
-
-    _connexion.clientData = {};
 
     _connexion.ws.onmessage = function (message) {
       // try to decode json (I assume that each message from server is json)
@@ -89,6 +88,12 @@ var CONNEXION = (function (){
           var listeners = _connexion.listeners[json.msg];
           _connexion.callListeners(listeners, json);
         }
+      }
+    };
+
+    _connexion.ws.onopen = function (event) {
+      if(typeof opencallback !== 'undefined' && opencallback !== null){
+        opencallback(event);
       }
     };
   };

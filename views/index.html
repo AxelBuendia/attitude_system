@@ -95,7 +95,12 @@
     window.addEventListener("load", function(event) {
       AdaptDOMElementsToRole('player');
       CONNEXION.addListener('games_list', InitGamesList);
-      CONNEXION.connectTo(document.domain);
+      CONNEXION.connectTo(document.domain, function (){
+        var btnElt = document.getElementById('button_connect');
+        if(btnElt != null){
+          btnElt.setAttribute('disabled', false);
+        }
+      });
     });
 
   </script>
@@ -139,7 +144,7 @@
         <p>Puis sélectionnez une partie <select id="game_list" name="game_name"></select></p>
         <p class="role no_player no_observer">ou créer une nouvelle partie <input type="text" name="new_game_name" autofocus/></p>
         <p class="role no_observer">Choisissez un pseudo <input type="text" name="pseudo" autofocus/></p>
-      <button type="submit">OK</button></form><br/>
+      <button type="submit" disabled id="button_connect">OK</button></form><br/>
     </div>
   </div>
 </body>
