@@ -37,7 +37,7 @@ var CONNEXION = (function (){
     this.addMessageListener('pseudo_already_in_use', ChangePseudo);
     if(typeof listeners != 'undefined')
       this.addMessageListeners(listeners);
-    this.send({msg:'connect_pseudo', pseudo:pseudo, type:type, game:game});
+    this.send({'msg':'connect_pseudo', 'pseudo':pseudo, 'type':type, 'game':game});
     this.clientData.type = type;
     this.clientData.pseudo = pseudo;
     this.clientData.gameId = game;
