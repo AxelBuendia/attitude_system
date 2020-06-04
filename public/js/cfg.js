@@ -4,6 +4,3 @@ if (typeof process == 'undefined'){
 if (typeof process.env == 'undefined'){
   process.env = {};
 }
-if (typeof process.env.WS_PORT == 'undefined'){
-  process.env.WS_PORT = 3000;
-}
