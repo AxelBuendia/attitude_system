@@ -116,6 +116,7 @@
 	
 		DragDropMng.selectedElement.setAttributeNS(null, "x", DragDropMng.startX + dx);
 		DragDropMng.selectedElement.setAttributeNS(null, "y", DragDropMng.startY + dy);
+		console.log((DragDropMng.startX + dx) + "/" + (DragDropMng.startY + dy));
 	}
 			
 	function deselectElement(evt) {
