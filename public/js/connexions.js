@@ -53,7 +53,7 @@ var CONNEXION = (function (){
     _connexion.addMessageListener('ws_error', ConnectionErrorManager);
     _connexion.clientData = {};
 
-    url += ':'+process.env.WS_PORT;
+    //url += ':'+process.env.WS_PORT;
     if(location.protocol=='https:')
       url = 'wss://'+url;
     else
