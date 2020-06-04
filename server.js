@@ -122,7 +122,7 @@ wss.manageNewPseudo = function (json, ws) {
       var playersPseudos = this.getPseudos('player', json.game);
       var dramaturgesPseudos = this.getPseudos('dramaturge', json.game);
       if(ws.clientData.type == 'player'){
-        ws.clientData.grid = { 'elements':[{name:'Vigilance', x:50, y:150, value:7},{name:'AudacePerformance', x:400, y:150, value:0},{name:'Concentration1', x:100, y:600, value:0},{name:'Concentration2', x:400, y:600, value:0}], 'tokensCount':7};
+        ws.clientData.grid = { 'elements':[{name:'Vigilance', x:100, y:250, value:7},{name:'AudacePerformance', x:700, y:250, value:0},{name:'Concentration1', x:100, y:700, value:0},{name:'Concentration2', x:700, y:700, value:0}], 'tokensCount':7};
         ws.send(JSON.stringify({'msg':'init','playersPseudos':playersPseudos,'dramaturgesPseudos':dramaturgesPseudos,'clientData':ws.clientData,'gameData':gameData}));
       }else if(ws.clientData.type == 'dramaturge'){
         var grids = this.getPlayerGrids(json.game);
