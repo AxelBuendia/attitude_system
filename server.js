@@ -122,7 +122,7 @@ wss.manageNewPseudo = function (json, ws) {
       var playersPseudos = this.getPseudos('player', json.game);
       var dramaturgesPseudos = this.getPseudos('dramaturge', json.game);
       if(ws.clientData.type == 'player'){
-        ws.clientData.grid = { 'elements':[{name:'Vigilance', x:100, y:250, value:7},{name:'AudacePerformance', x:700, y:250, value:0},{name:'Concentration1', x:100, y:700, value:0},{name:'Concentration2', x:700, y:700, value:0}], 'tokensCount':7};
+        ws.clientData.grid = { 'elements':[{name:'Vigilance', x:25, y:354, value:7},{name:'AudacePerformance', x:920, y:411, value:0},{name:'AudaceBetAgainst', x:1529, y:414, value:0},{name:'Precaution', x:237, y:801, value:0},{name:'AudaceRapidite', x:897, y:802, value:0},{name:'AudaceRuse', x:1536, y:782, value:0},{name:'Concentration1', x:243, y:1291, value:0},{name:'Concentration2', x:884, y:1291, value:0},{name:'Concentration3', x:1538, y:1291, value:0}], 'tokensCount':7};
         ws.send(JSON.stringify({'msg':'init','playersPseudos':playersPseudos,'dramaturgesPseudos':dramaturgesPseudos,'clientData':ws.clientData,'gameData':gameData}));
       }else if(ws.clientData.type == 'dramaturge'){
         var grids = this.getPlayerGrids(json.game);
