@@ -163,10 +163,19 @@ function InitGrid (json, connexion){
       }
     });
   }else if(json.clientData.type == 'dramaturge'){
-    // {'msg':'init','playersPseudos':playersPseudos,'dramaturgesPseudos':dramaturgesPseudos,'grids':grids,'gameData':this.data}
+    // {'msg':'init','playersPseudos':playersPseudos,'dramaturgesPseudos':dramaturgesPseudos,'grids':grids,'gameData':this.data,'gridDefinition':gridDefinition}
     // grids: [{'pseudo':pseudo, 'elements':elements}]
     var gridsTable = document.getElementById("Grids");
     if (gridsTable == null) return;
+    // Setup the table according to the grid elements
+    var gridDefinition = json.gridDefinition.elements;
+    for (var elt_i in gridDefinition){
+      var row = gridsTable.insertRow(-1);
+      var cell = row.insertCell(0);
+      cell.classList.add('grids_header');
+      cell.innerHTML = gridDefinition[elt_i].name;
+    }
+    // Add players scores in the table
     var grids = json.grids;
     for (var grid_i in grids){
       var grid = grids[grid_i];
