@@ -2,36 +2,26 @@
 //************************* DOTENV ***************************************//
 //************************************************************************//
 require('dotenv').config();
+// Manage for glitch.com
+const PORT = process.env.PORT;
+//console.log(process.env);
 
 //********************************************************************************//
 //************************* EXPRESS SERVER ***************************************//
 //********************************************************************************//
+//import * as express from 'express';
+//import * as http from 'http';
+//import * as WebSocket from 'ws';
 const express = require('express')
+const http = require('http');
+const WebSocket = require('ws');
 const app = express();
-const expressWS = require('express-ws')(app);
-
-// static files in public
-app.use(express.static('public'));
-
-// http://expressjs.com/en/starter/basic-routing.html
-app.get('/', function(request, response) {
-  response.sendFile(__dirname + '/views/index.html');
-});
-
-// reroute ws to ws server
-app.ws('/', function(ws, request) {});
-
-
-//************************************************************************//
-//************************* CONFIG ***************************************//
-//************************************************************************//
-const config = require('./public/js/cfg');
+const server = http.createServer(app);
+const wss = new WebSocket.Server({'server':server});
 
 //*********************************************************************************//
 //************************* ATTITUDE SERVER ***************************************//
 //*********************************************************************************//
-
-var wss = expressWS.getWss();  
 
 wss.serverData = {};
 
@@ -191,6 +181,7 @@ wss.on('connection', function(ws) {
 //    console.log(json);
     switch(json.msg){
       case 'ping':
+        console.log("ping received from "+ws.clientData.pseudo);
         ws.send(JSON.stringify({'msg':'pong'}));
       break;
       case 'connect_pseudo':
@@ -253,8 +244,15 @@ function chronometre(){
   }
 }
 
-// Manage for glitch.com
-var port = process.env.PORT;
-console.log(process.env);
+//************************************************************************//
+//************************* ROUTING **************************************//
+//************************************************************************//
+// static files in public
+app.use(express.static('public'));
 
-var listener = app.listen(port, function(){ console.log('Attitude Server is listening on port '+listener.address().port+'!'); });
+// http://expressjs.com/en/starter/basic-routing.html
+app.get('/', function(request, response) {
+  response.sendFile(__dirname + '/views/index.html');
+});
+
+const LISTENER = server.listen(PORT, function(){ console.log('Attitude Server is listening on port '+LISTENER.address().port+'!'); });

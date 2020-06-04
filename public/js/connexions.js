@@ -41,11 +41,15 @@ var CONNEXION = (function (){
     this.clientData.type = type;
     this.clientData.pseudo = pseudo;
     this.clientData.gameId = game;
-    this.pingIntervalID = window.setInterval(function (){ this.send({'msg':'ping'}); }, 60000);
+    this.pingIntervalID = window.setInterval(function (){ _connexion.send({'msg':'ping'}); }, 55000);
   };
 
   _connexion.send = function (json) {
-    _connexion.ws.send(JSON.stringify(json));
+    if(_connexion.ws.readyState == 1){
+      _connexion.ws.send(JSON.stringify(json));
+    }else{
+      console.log('Connection not in the right state to send data ['+_connexion.ws.readyState+']!');
+    }
   };
 
   function _connectTo (url, opencallback) {
@@ -53,7 +57,7 @@ var CONNEXION = (function (){
     _connexion.addMessageListener('ws_error', ConnectionErrorManager);
     _connexion.clientData = {};
 
-    //url += ':'+process.env.WS_PORT;
+//    url += ':'+process.env.WS_PORT;
     if(location.protocol=='https:')
       url = 'wss://'+url;
     else
@@ -71,7 +75,7 @@ var CONNEXION = (function (){
 
     _connexion.ws.onmessage = function (message) {
       // try to decode json (I assume that each message from server is json)
-  //    console.log('Message received:'+message.data);
+      console.log('Message received:'+message.data);
       try {
         var json = JSON.parse(message.data);
       } catch (e) {
@@ -96,16 +100,20 @@ var CONNEXION = (function (){
         opencallback(event);
       }
     };
+
+    _connexion.ws.onclose = function (event) {
+      alert('Connection closed');
+    };
   };
 
   return {
-    connectTo: function (url){ _connectTo(url); },
+    connectTo: function (url, clbk){ _connectTo(url, clbk); },
     getConnexion: function (){ return _connexion; },
     getClientData: function (){ return _connexion.clientData; },
     addListeners: function (newListeners){ _connexion.addMessageListeners(newListeners); },
     addListener: function (message, callback){ _connexion.addMessageListener(message, callback); },
     connectAs: function (pseudo, type, game, listeners){ _connexion.connectToGame(pseudo, type, game, listeners); },
     createGame: function (pseudo, type, game, listeners){ _connexion.connectToGame(pseudo, type, game, listeners); },
-    send: function (json){ _connexion.ws.send(JSON.stringify(json)); }
+    send: function (json){ _connexion.send(json); }
   }
 })();
