@@ -24,7 +24,7 @@
 
 	var Grid = {
 		
-		TokenScale: 0.3,
+		TokenScale: 0.7,
 		ViewPortScale: 1,
 		Grid: [],
 		Scores: [],

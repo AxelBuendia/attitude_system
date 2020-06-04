@@ -144,7 +144,7 @@ function InitGrid (json, connexion){
     }*/
     connexion.grid = json.clientData.grid;
 //    console.log(grille);
-    grille.contentDocument.initGrid(json.clientData.grid.elements, 0.6);
+    grille.contentDocument.initGrid(json.clientData.grid.elements, 0.3);
     var jeton_i = 0;
     for(var gridElt_i in json.clientData.grid.elements){
       var gridElt = json.clientData.grid.elements[gridElt_i];
