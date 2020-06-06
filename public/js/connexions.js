@@ -94,6 +94,9 @@ var CONNEXION = (function (){
           var listeners = _connexion.listeners[json.msg];
           _connexion.callListeners(listeners, json);
         }
+        if(json.msg == 'ping'){
+          _connexion.send({'msg':'pong'})
+        }
       }
     };
 
