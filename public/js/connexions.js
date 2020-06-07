@@ -41,7 +41,13 @@ var CONNEXION = (function (){
     this.clientData.type = type;
     this.clientData.pseudo = pseudo;
     this.clientData.gameId = game;
-    this.pingIntervalID = window.setInterval(function (){ _connexion.send({'msg':'ping'}); }, 55000);
+    this.pingIntervalID = window.setInterval(function (){
+      _connexion.send({'msg':'ping'}); 
+      _connexion.pong = setTimeout(function(){
+        console.log("Not responding to ping, so close ["+pseudo+"]");
+        ws.close();
+      }, 5000);
+    }, 55000);
   };
 
   _connexion.send = function (json) {
@@ -96,6 +102,8 @@ var CONNEXION = (function (){
         }
         if(json.msg == 'ping'){
           _connexion.send({'msg':'pong'})
+        }else if(json.msg == 'pong'){
+          clearTimeout(_connexion.pong);
         }
       }
     };

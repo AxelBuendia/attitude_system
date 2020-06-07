@@ -188,6 +188,7 @@ wss.on('connection', function(ws) {
       break;
       case 'pong':
         console.log("pong received from "+ws.clientData.pseudo);
+        clearTimeout(ws.pong);
       break;
       case 'connect_pseudo':
         // New game
@@ -230,6 +231,7 @@ wss.on('connection', function(ws) {
     console.log(type+' ['+pseudo+'] s\'est déconnecté');
     wss.broadcast(JSON.stringify({'msg':'deconnexion', 'type':type, 'pseudo':pseudo}));
     clearInterval(ws.ping);
+    ws.ping = null;
   });
 
   ws.on('error', function(error){
@@ -240,6 +242,10 @@ wss.on('connection', function(ws) {
   ws.ping = setInterval(function(){
     console.log("ping send to "+ws.clientData.pseudo);
     ws.send(JSON.stringify({'msg':'ping'}));
+    ws.pong = setTimeout(function(){
+    	console.log("Not responding to ping, so close ["+ws.clientData.pseudo+"]");
+    	ws.close();
+    }, 5000);
   }, 55000);
 
 });
