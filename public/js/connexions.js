@@ -116,6 +116,7 @@ var CONNEXION = (function (){
 
     _connexion.ws.onclose = function (event) {
       alert('Connection closed');
+      window.location.reload();
     };
   };
 
