@@ -45,7 +45,7 @@ var CONNEXION = (function (){
       _connexion.send({'msg':'ping'}); 
       _connexion.pong = setTimeout(function(){
         console.log("Not responding to ping, so close ["+pseudo+"]");
-        ws.close();
+        _connexion.ws.close();
       }, 5000);
     }, 55000);
   };

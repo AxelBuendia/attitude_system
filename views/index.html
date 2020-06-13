@@ -48,12 +48,15 @@
       });
     }
 
-    function AdaptDOMElementsToRole(role) {
-      var eltsToReset = document.getElementsByClassName('role');
-      for (var iElt=eltsToReset.length-1; iElt>=0; --iElt) { eltsToReset[iElt].classList.remove('no_display'); }
-      var classHidden = 'no_'+role;
-      var eltsToHide = document.getElementsByClassName(classHidden);
-      for (var iElt=eltsToHide.length-1; iElt>=0; --iElt) { eltsToHide[iElt].classList.add('no_display'); }
+    function AdaptDOMElementsToClass(baseClass, noDisplayClass) {
+      if(baseClass != ''){
+        var eltsToReset = document.getElementsByClassName(baseClass);
+        for (var iElt=eltsToReset.length-1; iElt>=0; --iElt) { eltsToReset[iElt].classList.remove('no_display'); }
+      }
+      if (noDisplayClass != '') {
+        var eltsToHide = document.getElementsByClassName(noDisplayClass);
+        for (var iElt=eltsToHide.length-1; iElt>=0; --iElt) { eltsToHide[iElt].classList.add('no_display'); }
+      }
     }
 
     function InitScreen(json){
@@ -63,7 +66,15 @@
 
     function ChangeRole(selectElt) {
       var role = selectElt.value;
-      AdaptDOMElementsToRole(role);
+      AdaptDOMElementsToClass('role', 'no_'+role);
+    }
+
+    function ChangeGame(selectElt) {
+      var game = selectElt.value;
+      if(game!='create')
+        AdaptDOMElementsToClass('game', 'no_game');
+      else
+        AdaptDOMElementsToClass('game', '');
     }
 
     function ConnectGame(formElt) {
@@ -93,7 +104,10 @@
     }
 
     window.addEventListener("load", function(event) {
-      AdaptDOMElementsToRole('player');
+      var roleElt = document.getElementById('role');
+      ChangeRole(roleElt);
+      var gameElt = document.getElementById('game_list');
+      ChangeGame(gameElt);
       CONNEXION.addListener('games_list', InitGamesList);
       CONNEXION.connectTo(document.domain, function (){
         var btnElt = document.getElementById('button_connect');
@@ -137,9 +151,9 @@
     <div>
       <h1>Bienvenue dans le système de gestion de parties "Attitude".</h1>
       <form id="splash_screen_form" onsubmit="return ConnectGame(this);">
-        <p>Choisissez un rôle <select name="type" autofocus onchange="ChangeRole(this)"><option value="player">Joueur</option><option value="observer">Observateur</option><option value="dramaturge">Dramaturge</option></select></p>
-        <p>Puis sélectionnez une partie <select id="game_list" name="game_name"></select></p>
-        <p class="role no_player no_observer">ou créer une nouvelle partie <input type="text" name="new_game_name" autofocus/></p>
+        <p>Choisissez un rôle <select id='role'name="type" autofocus onchange="ChangeRole(this)"><option value="player">Joueur</option><option value="observer">Observateur</option><option value="dramaturge">Dramaturge</option></select></p>
+        <p>Puis sélectionnez une partie <select id="game_list" name="game_name" onchange="ChangeGame(this)"><option class="role no_observer no_player" value="create">Create a new game</option></select></p>
+        <p class="role no_player no_observer game no_game">ou créer une nouvelle partie <input type="text" name="new_game_name" autofocus/></p>
         <p class="role no_observer">Choisissez un pseudo <input type="text" name="pseudo" autofocus/></p>
       <input type="submit" disabled id="button_connect" value="Connecting..."></form><br/>
     </div>
