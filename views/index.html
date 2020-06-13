@@ -66,7 +66,23 @@
 
     function ChangeRole(selectElt) {
       var role = selectElt.value;
+      var gameElt = document.getElementById('game_list');
+      var optionCreateElt = null;
+      for(var iOption=0; iOption<gameElt.options.length; ++iOption){
+        var option = gameElt.options[iOption];
+        if(option.value == 'create')
+          optionCreateElt = option;
+      }
+      if(role == 'dramaturge' && optionCreateElt==null){
+        var optionCreate = document.createElement("option");
+        optionCreate.text = "Créer une nouvelle partie";
+        optionCreate.value = "create";
+        gameElt.add(optionCreate, 0);
+      }else if(role != 'dramaturge' && optionCreateElt!=null){
+        gameElt.remove(optionCreateElt);
+      }
       AdaptDOMElementsToClass('role', 'no_'+role);
+      ChangeGame(gameElt);
     }
 
     function ChangeGame(selectElt) {
@@ -152,7 +168,7 @@
       <h1>Bienvenue dans le système de gestion de parties "Attitude".</h1>
       <form id="splash_screen_form" onsubmit="return ConnectGame(this);">
         <p>Choisissez un rôle <select id='role'name="type" autofocus onchange="ChangeRole(this)"><option value="player">Joueur</option><option value="observer">Observateur</option><option value="dramaturge">Dramaturge</option></select></p>
-        <p>Puis sélectionnez une partie <select id="game_list" name="game_name" onchange="ChangeGame(this)"><option class="role no_observer no_player" value="create">Create a new game</option></select></p>
+        <p>Puis sélectionnez une partie <select id="game_list" name="game_name" onchange="ChangeGame(this)"></select></p>
         <p class="role no_player no_observer game no_game">ou créer une nouvelle partie <input type="text" name="new_game_name" autofocus/></p>
         <p class="role no_observer">Choisissez un pseudo <input type="text" name="pseudo" autofocus/></p>
       <input type="submit" disabled id="button_connect" value="Connecting..."></form><br/>
