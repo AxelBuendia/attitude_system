@@ -18,21 +18,72 @@ const WebSocket = require('ws');
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({'server':server});
+const fs = require('fs');
+const GAMES_DIR = "./games";
 
 //*********************************************************************************//
 //************************* ATTITUDE SERVER ***************************************//
 //*********************************************************************************//
 
-wss.serverData = {};
+wss.loadGamesList = function (){
+	var savedGamesList = [];
+	try{
+		var dir = fs.opendirSync(GAMES_DIR);
 
-wss.getCurrentGames = function (){
+		while(file = dir.readSync()){
+			if(file.isFile()){
+				savedGamesList.push(file.name);
+			}
+		}
+	}catch(e){
+		console.error(e);
+	}
+	return savedGames;
+};
+
+wss.serverData = {};
+wss.serverData.savedGamesList = wss.loadGamesList();
+
+wss.loadSavedGameByName = function (id){
+	try{
+		return JSON.parse(fs.readFileSync(GAMES_DIR+'/'+id, 'utf8'));
+	}catch(e){
+		console.error(e);
+		return {};
+	}
+};
+
+wss.getCurrentGamesList = function (originalWS, doublon){
+	if(typeof doublon == 'undefined')
+		doublon = false;
   var games = [];
   this.clients.forEach(function (ws) {
-    if (typeof ws.clientData.gameId != 'undefined' && !games.includes(ws.clientData.gameId)){
+    if (ws != originalWS && typeof ws.clientData.gameId != 'undefined' && (doublon || !games.includes(ws.clientData.gameId)){
       games.push(ws.clientData.gameId);
     }
   });
   return games;
+};
+
+wss.saveGame = function (id, data) {
+	try{
+		fs.writeFileSync(GAMES_DIR+'/'+id, JSON.stringify(data));
+	}catch(e){
+		console.error(e);
+	}
+};
+
+wss.cleanGames = function (ws) {
+	if(typeof ws.clientData != 'undefined' && typeof ws.clientData.gameId != 'undefined'){
+		var gameId = ws.clientData.gameId;
+		var gamesList = this.getCurrentGamesList(ws, true);
+		if(!gamesList.includes(gameId)){	// no one left on this game so save it
+			var game = this.serverData.games[gameId];
+			if(typeof game != 'undefined'){
+				this.saveGame(gameId, game);
+			}
+		}
+	}
 };
 
 wss.checkPseudo = function (pseudo, gameId, ws) {
@@ -158,8 +209,9 @@ wss.on('connection', function(ws) {
 //  var parameters = this.urlParametersToJSon(ws.upgradeReq.url);
   ws.clientData = {};
   // send the current games as return message
-  var currentGames = this.getCurrentGames();
-  ws.send(JSON.stringify({'msg':'games_list', 'games':currentGames}));
+  var currentGamesList = this.getCurrentGamesList();
+  var savedGamesList = this.getSavedGamesList();
+  ws.send(JSON.stringify({'msg':'games_list', 'games':currentGamesList, 'savedGames':this.serverData.savedGamesList}));
 //  this.manageNewPseudo(parameters, ws);
 //  console.log(ws);
   
@@ -192,20 +244,22 @@ wss.on('connection', function(ws) {
       break;
       case 'connect_pseudo':
         // New game
-        if(!wss.getCurrentGames().includes(json.game)){
+        if(!wss.getCurrentGamesList().includes(json.game)){
           if(typeof wss.serverData.games=='undefined'){
             wss.serverData.games = [];
           }
           if(typeof wss.serverData.games[json.game] == 'undefined'){
-            wss.serverData.games[json.game] = {};
+            wss.serverData.games[json.game] = wss.loadSavedGameByName(json.game);
           }
         }
         wss.manageNewPseudo(json, this);
       break;
       case 'push_content':
-//        console.log('content has been pushed');
-        wss.broadcast(JSON.stringify({'msg':'receive_content', 'url':json.url}));
-        wss.serverData.games[this.clientData.gameId].currentContentURL = json.url;
+      	if(this.clientData.type == 'dramaturge'){
+      		//        console.log('content has been pushed');
+        	wss.broadcast(JSON.stringify({'msg':'receive_content', 'url':json.url}));
+        	wss.serverData.games[this.clientData.gameId].currentContentURL = json.url;
+        }
       break;
       case 'swap_grid_token':
         wss.broadcastToType('dramaturge', message);
@@ -230,7 +284,8 @@ wss.on('connection', function(ws) {
     var pseudo = (typeof this.clientData.pseudo === 'undefined') ? 'observer' : this.clientData.pseudo;
     console.log(type+' ['+pseudo+'] s\'est déconnecté');
     wss.broadcast(JSON.stringify({'msg':'deconnexion', 'type':type, 'pseudo':pseudo}));
-    clearInterval(ws.ping);
+    clearInterval(this.ping);
+    wss.cleanGames(this);
     ws.ping = null;
   });
 
