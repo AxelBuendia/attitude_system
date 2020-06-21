@@ -25,7 +25,7 @@ const GAMES_DIR = "./games";
 //************************* ATTITUDE SERVER ***************************************//
 //*********************************************************************************//
 
-wss.loadGamesList = function (){
+wss.getSavedGamesList = function (){
 	var savedGamesList = [];
 	try{
 		var dir = fs.opendirSync(GAMES_DIR);
@@ -38,11 +38,11 @@ wss.loadGamesList = function (){
 	}catch(e){
 		console.error(e);
 	}
-	return savedGames;
+	return savedGamesList;
 };
 
 wss.serverData = {};
-wss.serverData.savedGamesList = wss.loadGamesList();
+wss.serverData.savedGamesList = wss.getSavedGamesList();
 
 wss.loadSavedGameByName = function (id){
 	try{
@@ -58,7 +58,7 @@ wss.getCurrentGamesList = function (originalWS, doublon){
 		doublon = false;
   var games = [];
   this.clients.forEach(function (ws) {
-    if (ws != originalWS && typeof ws.clientData.gameId != 'undefined' && (doublon || !games.includes(ws.clientData.gameId)){
+    if (ws != originalWS && typeof ws.clientData.gameId != 'undefined' && (doublon || !games.includes(ws.clientData.gameId))){
       games.push(ws.clientData.gameId);
     }
   });
@@ -230,7 +230,7 @@ wss.on('connection', function(ws) {
   ws.clientData = {};
   // send the current games as return message
   var currentGamesList = this.getCurrentGamesList();
-  var savedGamesList = this.getSavedGamesList();
+  var savedGamesList = this.savedGamesList;
   ws.send(JSON.stringify({'msg':'games_list', 'games':currentGamesList, 'savedGames':this.serverData.savedGamesList}));
 //  this.manageNewPseudo(parameters, ws);
 //  console.log(ws);

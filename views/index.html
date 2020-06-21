@@ -38,14 +38,38 @@
       }
     };
 
+    function FindOption(selectElt, value){
+      for(var iOption=0; iOption<selectElt.options.length; ++iOption){
+        var option = selectElt.options[iOption];
+        if(option.value == value)
+          return option;
+      }
+      return null;
+    };
+
     function InitGamesList(json){
       var selectGameElt = document.getElementById('game_list');
       json.games.forEach(function (game, idx){
         var option = document.createElement('OPTION');
         option.value = game;
         option.innerText = game;
+        option.dataset.online = true;
         selectGameElt.appendChild(option);
       });
+      json.savedGames.forEach(function (game, idx){
+        var option = FindOption(selectElt, game);
+        if(option == null){
+          document.createElement('OPTION');
+          option.value = game;
+          option.innerText = game;
+          option.dataset.online = false;
+          selectGameElt.appendChild(option);
+        }
+      });
+      var roleElt = document.getElementById('role');
+      ChangeRole(roleElt);
+      var gameElt = document.getElementById('game_list');
+      ChangeGame(gameElt);
     }
 
     function AdaptDOMElementsToClass(baseClass, noDisplayClass) {
@@ -67,19 +91,17 @@
     function ChangeRole(selectElt) {
       var role = selectElt.value;
       var gameElt = document.getElementById('game_list');
-      var optionCreateElt = null;
-      for(var iOption=0; iOption<gameElt.options.length; ++iOption){
-        var option = gameElt.options[iOption];
-        if(option.value == 'create')
-          optionCreateElt = option;
-      }
-      if(role == 'dramaturge' && optionCreateElt==null){
-        var optionCreate = document.createElement("option");
-        optionCreate.text = "Créer une nouvelle partie";
-        optionCreate.value = "create";
-        gameElt.add(optionCreate, 0);
-      }else if(role != 'dramaturge' && optionCreateElt!=null){
-        gameElt.remove(optionCreateElt);
+      var optionCreateElt = FindOption(gameElt, 'create');
+      if(role == 'dramaturge'){
+        if(optionCreateElt){
+          optionCreateElt.selected = false;
+          optionCreateElt.disabled = false;
+        }
+      }else if(role != 'dramaturge'){
+        if(optionCreateElt){
+          optionCreateElt.selected = false;
+          optionCreateElt.disabled = true;
+        }
       }
       AdaptDOMElementsToClass('role', 'no_'+role);
       ChangeGame(gameElt);
@@ -120,10 +142,6 @@
     }
 
     window.addEventListener("load", function(event) {
-      var roleElt = document.getElementById('role');
-      ChangeRole(roleElt);
-      var gameElt = document.getElementById('game_list');
-      ChangeGame(gameElt);
       CONNEXION.addListener('games_list', InitGamesList);
       CONNEXION.connectTo(document.domain, function (){
         var btnElt = document.getElementById('button_connect');
@@ -168,7 +186,7 @@
       <h1>Bienvenue dans le système de gestion de parties "Attitude".</h1>
       <form id="splash_screen_form" onsubmit="return ConnectGame(this);">
         <p>Choisissez un rôle <select id='role'name="type" autofocus onchange="ChangeRole(this)"><option value="player">Joueur</option><option value="observer">Observateur</option><option value="dramaturge">Dramaturge</option></select></p>
-        <p>Puis sélectionnez une partie <select id="game_list" name="game_name" onchange="ChangeGame(this)"></select></p>
+        <p>Puis sélectionnez une partie <select id="game_list" name="game_name" onchange="ChangeGame(this)"><option disabled selected value> -- Choisir une Partie -- </option><option disabled value='create'>Créer une partie</option></select></p>
         <p class="role no_player no_observer game no_game">ou créer une nouvelle partie <input type="text" name="new_game_name" autofocus/></p>
         <p class="role no_observer">Choisissez un pseudo <input type="text" name="pseudo" autofocus/></p>
       <input type="submit" disabled id="button_connect" value="Connecting..."></form><br/>
