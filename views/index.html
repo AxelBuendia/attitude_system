@@ -52,14 +52,14 @@
       json.games.forEach(function (game, idx){
         var option = document.createElement('OPTION');
         option.value = game;
-        option.innerText = game;
+        option.innerText = game+' en cours';
         option.dataset.online = true;
         selectGameElt.appendChild(option);
       });
       json.savedGames.forEach(function (game, idx){
-        var option = FindOption(selectElt, game);
+        var option = FindOption(selectGameElt, game);
         if(option == null){
-          document.createElement('OPTION');
+          option = document.createElement('OPTION');
           option.value = game;
           option.innerText = game;
           option.dataset.online = false;
@@ -94,12 +94,13 @@
       var optionCreateElt = FindOption(gameElt, 'create');
       if(role == 'dramaturge'){
         if(optionCreateElt){
-          optionCreateElt.selected = false;
+          optionCreateElt.selected = true;
           optionCreateElt.disabled = false;
         }
       }else if(role != 'dramaturge'){
         if(optionCreateElt){
-          optionCreateElt.selected = false;
+          if(optionCreateElt.selected)
+            gameElt.selectedIndex = 0;
           optionCreateElt.disabled = true;
         }
       }
@@ -118,6 +119,10 @@
     function ConnectGame(formElt) {
       var type = formElt['type'].value;
       var gameName = formElt['game_name'].value;
+      if(gameName == ''){
+        alert('Il faut choisir une partie !')
+        return false;
+      }
       var pseudo = formElt['pseudo'].value;
       if(pseudo == ''){
         if(type == 'observer') pseudo = 'Observer';

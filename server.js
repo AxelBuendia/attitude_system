@@ -35,8 +35,10 @@ wss.getSavedGamesList = function (){
 				savedGamesList.push(file.name);
 			}
 		}
+		dir.close();
 	}catch(e){
 		console.error(e);
+		dir.close();
 	}
 	return savedGamesList;
 };
@@ -48,7 +50,8 @@ wss.loadSavedGameByName = function (id){
 	try{
 		return JSON.parse(fs.readFileSync(GAMES_DIR+'/'+id, 'utf8'));
 	}catch(e){
-		console.error(e);
+		if(e.code !== 'ENOENT')
+			console.error(e);
 		return {};
 	}
 };
@@ -66,6 +69,8 @@ wss.getCurrentGamesList = function (originalWS, doublon){
 };
 
 wss.saveGame = function (id, data) {
+	console.log('Saving game '+id);
+	console.log(data);
 	try{
 		fs.writeFileSync(GAMES_DIR+'/'+id, JSON.stringify(data));
 	}catch(e){
@@ -110,10 +115,12 @@ wss.getPseudos = function (type, gameId) {
 };
 
 wss.getPlayerData = function(pseudo, game) {
-	if(typeof game.players == 'undefined')	// first player added
-		game.players = [];
-	if(typeof game.players[pseudo] == 'undefined')	// unknown player so create an empty one
+	if(typeof game.players == 'undefined'){	// first player added
+		game.players = {};
+	}
+	if(typeof game.players[pseudo] == 'undefined'){	// unknown player so create an empty one
 		game.players[pseudo] = {};
+	}
 	return game.players[pseudo];
 };
 
@@ -191,7 +198,7 @@ wss.manageNewPseudo = function (json, ws, gameData) {
       if(ws.clientData.type == 'player'){
         ws.clientData.grid = gridDefinition;
         // Set player data from game
-        ws.clientData.player = wss.getPlayerData(json.pseudo);
+        ws.clientData.player = wss.getPlayerData(json.pseudo, gameData);
         ws.send(JSON.stringify({'msg':'init','playersPseudos':playersPseudos,'dramaturgesPseudos':dramaturgesPseudos,'clientData':ws.clientData,'currentContentURL':gameData.currentContentURL,'playerData':ws.clientData.player}));
       }else if(ws.clientData.type == 'dramaturge'){
         var grids = this.getPlayerGrids(json.game);
@@ -267,7 +274,7 @@ wss.on('connection', function(ws) {
         if(!wss.getCurrentGamesList().includes(json.game)){
         	if(json.type.toLowerCase() == 'dramaturge'){	// only dramaturge can create / load a game
 	          if(typeof wss.serverData.games=='undefined'){
-  	          wss.serverData.games = [];
+  	          wss.serverData.games = {};
     	      }
       	    if(typeof wss.serverData.games[json.game] == 'undefined'){
         	    wss.serverData.games[json.game] = wss.loadSavedGameByName(json.game);
@@ -277,7 +284,7 @@ wss.on('connection', function(ws) {
           	this.send(JSON.stringify({'error':'Only dramaturge can create/load a game!'}));
           }
         }else{
-	        wss.manageNewPseudo(json, this);
+	        wss.manageNewPseudo(json, this, wss.serverData.games[json.game]);
         }
       break;
       case 'push_content':
