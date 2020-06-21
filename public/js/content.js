@@ -36,8 +36,8 @@ function InitContent(json, connexion) {
 	if (pseudoElt !== null){
 		pseudoElt.innerHTML = json.clientData.type;
 	}
-	if (typeof json.gameData !== 'undefined' && typeof json.gameData.currentContentURL !== 'undefined'){
-		DisplayContent({'url':json.gameData.currentContentURL}, connexion);
+	if (typeof json.currentContentURL !== 'undefined'){
+		DisplayContent({'url':json.currentContentURL}, connexion);
 	}
 }
 

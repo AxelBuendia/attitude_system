@@ -109,6 +109,14 @@ wss.getPseudos = function (type, gameId) {
   return pseudos;
 };
 
+wss.getPlayerData = function(pseudo, game) {
+	if(typeof game.players == 'undefined')	// first player added
+		game.players = [];
+	if(typeof game.players[pseudo] == 'undefined')	// unknown player so create an empty one
+		game.players[pseudo] = {};
+	return game.players[pseudo];
+};
+
 wss.getPlayerGrids = function (gameId) {
   var grids = [];
   this.clients.forEach(function (ws){
@@ -136,6 +144,13 @@ wss.broadcast = function (data, exceptions) {
   });
 };
 
+wss.broadcastToGame = function (data, gameId, exceptions) {
+  this.clients.forEach(function (ws){
+    if ((ws.clientData.gameId==gameId) && (typeof exceptions === 'undefined' || exceptions.indexOf(ws.clientData.pseudo) == -1))
+      ws.send(data);
+  });
+};
+
 wss.broadcastToType = function (type, data) {
   this.clients.forEach(function (ws){
     if (typeof ws.clientData.type !== 'undefined' && ws.clientData.type == type){
@@ -155,7 +170,8 @@ wss.sendTo = function (ws, data) {
   ws.send(data);
 };
 
-wss.manageNewPseudo = function (json, ws) {
+wss.manageNewPseudo = function (json, ws, gameData) {
+	// check if the pseudo is already in use
   var iPseudo = -1;
   if (typeof json.pseudo !== 'undefined'){
     var entity = this.checkPseudo(json.pseudo, json.game, ws);
@@ -167,7 +183,6 @@ wss.manageNewPseudo = function (json, ws) {
   }else{
     ws.clientData.type = json.type.toLowerCase();
     ws.clientData.gameId = json.game;
-    var gameData = this.serverData.games[ws.clientData.gameId];
     var gridDefinition = { 'elements':[{name:'Vigilance', x:235, y:354, value:7},{name:'AudacePerformance', x:920, y:411, value:0},{name:'AudaceBetAgainst', x:1529, y:414, value:0},{name:'Precaution', x:237, y:801, value:0},{name:'AudaceRapidite', x:897, y:802, value:0},{name:'AudaceRuse', x:1536, y:782, value:0},{name:'Concentration1', x:243, y:1291, value:0},{name:'Concentration2', x:884, y:1291, value:0},{name:'Concentration3', x:1538, y:1291, value:0}], 'tokensCount':7};
     if(typeof json.pseudo !== 'undefined'){
       ws.clientData.pseudo = json.pseudo;
@@ -175,25 +190,30 @@ wss.manageNewPseudo = function (json, ws) {
       var dramaturgesPseudos = this.getPseudos('dramaturge', json.game);
       if(ws.clientData.type == 'player'){
         ws.clientData.grid = gridDefinition;
-        ws.send(JSON.stringify({'msg':'init','playersPseudos':playersPseudos,'dramaturgesPseudos':dramaturgesPseudos,'clientData':ws.clientData,'gameData':gameData}));
+        // Set player data from game
+        ws.clientData.player = wss.getPlayerData(json.pseudo);
+        ws.send(JSON.stringify({'msg':'init','playersPseudos':playersPseudos,'dramaturgesPseudos':dramaturgesPseudos,'clientData':ws.clientData,'currentContentURL':gameData.currentContentURL,'playerData':ws.clientData.player}));
       }else if(ws.clientData.type == 'dramaturge'){
         var grids = this.getPlayerGrids(json.game);
-        var dataJSON = {'msg':'init','playersPseudos':playersPseudos,'dramaturgesPseudos':dramaturgesPseudos,'clientData':ws.clientData,'gameData':gameData};
+        var dataJSON = {'msg':'init','playersPseudos':playersPseudos,'dramaturgesPseudos':dramaturgesPseudos,'clientData':ws.clientData,'currentContentURL':gameData.currentContentURL,'gameData':gameData};
         dataJSON.grids = grids;
         dataJSON.gridDefinition = gridDefinition;
         //console.log(dataJSON);
         var data = JSON.stringify(dataJSON);
         //console.log(data);
+        // Set dramaturge data (common to all dramaturges)
+        ws.clientData.game = gameData;
         ws.send(data);
-      }else{
-        ws.send(JSON.stringify({'msg':'init','clientData':ws.clientData,'gameData':gameData}));
+      }else{	// connected is an observer
+        ws.send(JSON.stringify({'msg':'init','clientData':ws.clientData,'currentContentURL':gameData.currentContentURL,'gameData':gameData}));
       }
       playersPseudos = null;
       dramaturgesPseudos = null;
-      this.broadcast(JSON.stringify({'msg':'connexion', 'type':ws.clientData.type, 'pseudo':ws.clientData.pseudo, 'grid':ws.clientData.grid}), [ws.clientData.pseudo]);
+
+      this.broadcastToGame(JSON.stringify({'msg':'connexion', 'type':ws.clientData.type, 'pseudo':ws.clientData.pseudo, 'grid':ws.clientData.grid}), ws.clientData.gameId, [ws.clientData.pseudo]);
       console.log(ws.clientData.type+' ['+ws.clientData.pseudo+'] connecté');
-    }else{
-      ws.send(JSON.stringify({'msg':'init','clientData':ws.clientData,'gameData':gameData}));
+    }else{	// Observer
+      ws.send(JSON.stringify({'msg':'init','clientData':ws.clientData,'currentContentURL':gameData.currentContentURL,'gameData':gameData}));
       console.log(ws.clientData.type+' connecté');
     }
   }
@@ -235,29 +255,35 @@ wss.on('connection', function(ws) {
 //    console.log(json);
     switch(json.msg){
       case 'ping':
-        console.log("ping received from "+ws.clientData.pseudo);
-        ws.send(JSON.stringify({'msg':'pong'}));
+        console.log("ping received from "+this.clientData.pseudo);
+        this.send(JSON.stringify({'msg':'pong'}));
       break;
       case 'pong':
-        console.log("pong received from "+ws.clientData.pseudo);
+        console.log("pong received from "+this.clientData.pseudo);
         clearTimeout(ws.pong);
       break;
       case 'connect_pseudo':
         // New game
         if(!wss.getCurrentGamesList().includes(json.game)){
-          if(typeof wss.serverData.games=='undefined'){
-            wss.serverData.games = [];
+        	if(json.type.toLowerCase() == 'dramaturge'){	// only dramaturge can create / load a game
+	          if(typeof wss.serverData.games=='undefined'){
+  	          wss.serverData.games = [];
+    	      }
+      	    if(typeof wss.serverData.games[json.game] == 'undefined'){
+        	    wss.serverData.games[json.game] = wss.loadSavedGameByName(json.game);
+          	}
+		        wss.manageNewPseudo(json, this, wss.serverData.games[json.game]);
+          }else{
+          	this.send(JSON.stringify({'error':'Only dramaturge can create/load a game!'}));
           }
-          if(typeof wss.serverData.games[json.game] == 'undefined'){
-            wss.serverData.games[json.game] = wss.loadSavedGameByName(json.game);
-          }
+        }else{
+	        wss.manageNewPseudo(json, this);
         }
-        wss.manageNewPseudo(json, this);
       break;
       case 'push_content':
       	if(this.clientData.type == 'dramaturge'){
       		//        console.log('content has been pushed');
-        	wss.broadcast(JSON.stringify({'msg':'receive_content', 'url':json.url}));
+        	wss.broadcastToGame(JSON.stringify({'msg':'receive_content', 'url':json.url}), this.clientData.gameId);
         	wss.serverData.games[this.clientData.gameId].currentContentURL = json.url;
         }
       break;
@@ -270,7 +296,7 @@ wss.on('connection', function(ws) {
       break;
       case 'chat_msg':
         if (json.to.all){
-          wss.broadcast(message);
+          wss.broadcastToGame(message, this.clientData.gameId);
         }else{
           wss.broadcastToList(json.to.persons, message);
           this.send(message);
@@ -283,7 +309,7 @@ wss.on('connection', function(ws) {
     var type = this.clientData.type;
     var pseudo = (typeof this.clientData.pseudo === 'undefined') ? 'observer' : this.clientData.pseudo;
     console.log(type+' ['+pseudo+'] s\'est déconnecté');
-    wss.broadcast(JSON.stringify({'msg':'deconnexion', 'type':type, 'pseudo':pseudo}));
+    wss.broadcastToGame(JSON.stringify({'msg':'deconnexion', 'type':type, 'pseudo':pseudo}), this.clientData.gameId);
     clearInterval(this.ping);
     wss.cleanGames(this);
     ws.ping = null;
@@ -304,17 +330,6 @@ wss.on('connection', function(ws) {
   }, 55000);
 
 });
-
-var chronoStart = 60;
-var chrono = chronoStart;
-
-function chronometre(){
-  if(chrono>0){
-    --chrono;
-    wss.broadcast(JSON.stringify({'time':chrono}));
-    setTimeout(chronometre, 1000);
-  }
-}
 
 //************************************************************************//
 //************************* ROUTING **************************************//
